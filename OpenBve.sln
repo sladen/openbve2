@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+# SharpDevelop 3.0.0.3800
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenBve", "OpenBve\OpenBve.csproj", "{AFB687A4-44F9-46BA-A15B-87F0BA3E7E8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenBveApi", "OpenBveApi\OpenBveApi.csproj", "{4200B701-6395-4A84-8DF0-E6017D02B078}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Standard.Texture.BmpGifExigJpgPngTiff", "Standard.Texture.BmpGifExigJpgPngTiff\Standard.Texture.BmpGifExigJpgPngTiff.csproj", "{A07774E6-D62B-4663-8041-515E73D1D06E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Standard.Sound.Wav", "Standard.Sound.Wav\Standard.Sound.Wav.csproj", "{EC1CAC65-B56A-49A0-8001-6FF8F2DA3D2E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Standard.Object.B3dCsv", "Standard.Object.B3dCsv\Standard.Object.B3dCsv.csproj", "{6CDB1405-063E-4D7A-9B89-D8369E9A5A20}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AFB687A4-44F9-46BA-A15B-87F0BA3E7E8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFB687A4-44F9-46BA-A15B-87F0BA3E7E8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFB687A4-44F9-46BA-A15B-87F0BA3E7E8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFB687A4-44F9-46BA-A15B-87F0BA3E7E8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4200B701-6395-4A84-8DF0-E6017D02B078}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4200B701-6395-4A84-8DF0-E6017D02B078}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4200B701-6395-4A84-8DF0-E6017D02B078}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4200B701-6395-4A84-8DF0-E6017D02B078}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A07774E6-D62B-4663-8041-515E73D1D06E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A07774E6-D62B-4663-8041-515E73D1D06E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A07774E6-D62B-4663-8041-515E73D1D06E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A07774E6-D62B-4663-8041-515E73D1D06E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC1CAC65-B56A-49A0-8001-6FF8F2DA3D2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC1CAC65-B56A-49A0-8001-6FF8F2DA3D2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC1CAC65-B56A-49A0-8001-6FF8F2DA3D2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC1CAC65-B56A-49A0-8001-6FF8F2DA3D2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CDB1405-063E-4D7A-9B89-D8369E9A5A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CDB1405-063E-4D7A-9B89-D8369E9A5A20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CDB1405-063E-4D7A-9B89-D8369E9A5A20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CDB1405-063E-4D7A-9B89-D8369E9A5A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+EndGlobal

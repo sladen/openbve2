@@ -1,0 +1,6 @@
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBveApi\bin\Release\OpenBveApi.dll
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBveApi\bin\Release\OpenBveApi.pdb
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBveApi\bin\Release\OpenBveApi.xml
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBveApi\obj\Release\ResolveAssemblyReference.cache
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBveApi\obj\Release\OpenBveApi.dll
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBveApi\obj\Release\OpenBveApi.pdb

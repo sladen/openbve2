@@ -1,0 +1,5 @@
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBve2\obj\Debug\ResolveAssemblyReference.cache
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBve2\bin\Debug\OpenBve2.exe
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBve2\bin\Debug\OpenBve2.pdb
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBve2\obj\Debug\OpenBve2.exe
+D:\Programming\Visual C# 2005 Projects\OpenBve2\OpenBve2\obj\Debug\OpenBve2.pdb
