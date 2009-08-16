@@ -1,47 +1,13 @@
-﻿CreateMeshBuilder
-AddVertex, 0, 0, 0
-AddVertex, 0, 1, 0
-AddVertex, 1, 1, 0
-AddVertex, 1, 0, 0
-AddFace, 0, 1, 2, 3
+CreateMeshBuilder
+Cube, 1, 1, 1
 SetColor, 255, 0, 0
+Translate, 0, 0.5, 1
 
 CreateMeshBuilder
-AddVertex, 0, 0, 1
-AddVertex, 0, 1, 1
-AddVertex, 1, 1, 1
-AddVertex, 1, 0, 1
-AddFace, 3, 2, 1, 0
-SetColor, 0, 255, 255
-
-CreateMeshBuilder
-AddVertex, 0, 0, 0
-AddVertex, 0, 1, 0
-AddVertex, 0, 1, 1
-AddVertex, 0, 0, 1
-AddFace, 3, 2, 1, 0
+Cube, 0.5, 0.5, 0.5
 SetColor, 0, 255, 0
+Translate, 1, 0, 2
 
 CreateMeshBuilder
-AddVertex, 1, 0, 0
-AddVertex, 1, 1, 0
-AddVertex, 1, 1, 1
-AddVertex, 1, 0, 1
-AddFace, 0, 1, 2, 3
-SetColor, 255, 0, 255
-
-CreateMeshBuilder
-AddVertex, 0, 0, 0
-AddVertex, 1, 0, 0
-AddVertex, 1, 0, 1
-AddVertex, 0, 0, 1
-AddFace, 0, 1, 2, 3
+Cylinder, 30, -1, 1, 4
 SetColor, 0, 0, 255
-
-CreateMeshBuilder
-AddVertex, 0, 1, 0
-AddVertex, 1, 1, 0
-AddVertex, 1, 1, 1
-AddVertex, 0, 1, 1
-AddFace, 3, 2, 1, 0
-SetColor, 255, 255, 0

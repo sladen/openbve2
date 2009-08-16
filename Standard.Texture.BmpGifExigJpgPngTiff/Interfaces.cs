@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Text;
 using OpenBveApi;
 
@@ -47,8 +46,8 @@ namespace Plugin {
 			if (type != Path.PathType.File) {
 				return General.Priority.NotCapable;
 			} else {
-				string extension = System.IO.Path.GetExtension(path).ToLowerInvariant();
-				switch (extension) {
+				string extension = System.IO.Path.GetExtension(path);
+				switch (extension.ToLowerInvariant()) {
 					case ".bmp":
 					case ".gif":
 					case ".exig":
@@ -71,14 +70,8 @@ namespace Plugin {
 		/// <param name="data">Optional data passed from another plugin. If you access this field, you must check the type before casting to that type.</param>
 		/// <param name="texture">Receives the texture.</param>
 		/// <returns>The success of the operation.</returns>
-		public General.Result LoadTexture(Path.PathType type, string path, Encoding encoding, object data, out Bitmap texture) {
-			try {
-				texture = new System.Drawing.Bitmap(path);
-				return General.Result.Successful;
-			} catch {
-				texture = null;
-				return General.Result.InvalidData;
-			}
+		public General.Result LoadTexture(Path.PathType type, string path, Encoding encoding, object data, out Texture.TextureData texture) {
+			return Loader.LoadTexture(path, out texture);
 		}
 		
 		

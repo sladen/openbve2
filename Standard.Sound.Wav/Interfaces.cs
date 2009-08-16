@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Text;
 using OpenBveApi;
 
@@ -54,7 +53,7 @@ namespace Plugin {
 		/// <param name="data">Optional data passed from another plugin. If you access this field, you must check the type before casting to that type.</param>
 		/// <param name="texture">Receives the texture.</param>
 		/// <returns>The success of the operation.</returns>
-		public General.Result LoadTexture(Path.PathType type, string path, Encoding encoding, object data, out Bitmap texture) {
+		public General.Result LoadTexture(Path.PathType type, string path, Encoding encoding, object data, out Texture.TextureData texture) {
 			texture = null;
 			return General.Result.NotSupported;
 		}

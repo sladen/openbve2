@@ -7,6 +7,16 @@ namespace OpenBve {
 
 	internal static class Renderer {
 		
+		// opengl state
+		private struct OpenGlState {
+			internal bool TexturingEnabled;
+			internal int TextureCurrentlyBound;
+		}
+		
+		// members
+		private static OpenGlState State = new OpenGlState();
+		private static float[] LightPosition = new float[] { 0.223606797749979f, 0.86602540378444f, -0.447213595499958f, 0.0f };
+		
 		// initialize
 		internal static void Initialize() {
 			
@@ -28,9 +38,10 @@ namespace OpenBve {
 			Glu.gluLookAt(0.0, 0.0, -5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 			Gl.glMatrixMode(Gl.GL_MODELVIEW);
 			
-			#if false
+			#if true
 			Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT, new float[] { 0.6f, 0.55f, 0.5f, 1.0f });
 			Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_DIFFUSE, new float[] { 0.5f, 0.45f, 0.4f, 1.0f });
+			//Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_SPECULAR, new float[] { 0.8f, 0.8f, 0.8f, 1.0f });
 			Gl.glLightModelfv(Gl.GL_LIGHT_MODEL_AMBIENT, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
 			Gl.glEnable(Gl.GL_LIGHTING);
 			Gl.glEnable(Gl.GL_LIGHT0);
@@ -41,29 +52,39 @@ namespace OpenBve {
 			Gl.glShadeModel(Gl.GL_FLAT);
 			#endif
 			
+			//Gl.glPolygonMode(Gl.GL_FRONT_AND_BACK, Gl.GL_LINE);
+			
 			Gl.glCullFace(Gl.GL_FRONT);
 			Gl.glEnable(Gl.GL_CULL_FACE);
 
-			string fileName = OpenBveApi.Path.CombineFile(Program.Path, "object.csv");
+			const string fileTitle = "object.csv";
+			string fileName = OpenBveApi.Path.CombineFile(Program.Path, fileTitle);
 			OpenBveApi.Path.PathReference path = new OpenBveApi.Path.PathReference(OpenBveApi.Path.PathBase.AbsolutePath, OpenBveApi.Path.PathType.File, fileName);
 			System.Text.Encoding encoding = System.Text.Encoding.UTF8;
 			OpenBveApi.General.Origin origin = new OpenBveApi.General.Origin(path, null, encoding);
 			OpenBveApi.Geometry.GenericObject obj;
 			if (Interfaces.Host10.LoadObject(origin, out obj) == OpenBveApi.General.Result.Successful) {
 				Console.ForegroundColor = ConsoleColor.Green;
-				Console.WriteLine("Object loaded successfully.");
+				Console.WriteLine("Object loaded successfully: " + fileTitle);
 				Console.ForegroundColor = ConsoleColor.Gray;
 			} else {
 				Console.ForegroundColor = ConsoleColor.Yellow;
-				Console.WriteLine("Object could not be loaded.");
+				Console.WriteLine("Object could not be loaded: " + fileTitle);
 				Console.ForegroundColor = ConsoleColor.Gray;
 			}
-			OpenBveApi.Geometry.Mesh mesh = (OpenBveApi.Geometry.Mesh)obj;
+			OpenBveApi.Geometry.FaceVertexMesh mesh = (OpenBveApi.Geometry.FaceVertexMesh)obj;
+			
+			//Subdivide(mesh);
 
 			DISPLAY_LIST = Gl.glGenLists(1);
 			RenderToDisplayList(mesh, DISPLAY_LIST);
 
 		}
+		
+		
+		
+		
+		
 		
 		// DEBUG
 		private static int DISPLAY_LIST = 0;
@@ -78,22 +99,45 @@ namespace OpenBve {
 			
 			Gl.glClear(Gl.GL_COLOR_BUFFER_BIT | Gl.GL_DEPTH_BUFFER_BIT);
 			Gl.glLoadIdentity();
-			const double radius = 20.0;
+			const double radius = 25.0;
 			double angle = 0.001 * (double)System.Environment.TickCount;
 			Glu.gluLookAt(Math.Cos(angle) * radius, 0.0, Math.Sin(angle) * radius, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-			
+			Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_POSITION, ref LightPosition[0]);
+
 			Gl.glCallList(DISPLAY_LIST);
 			
 			Sdl.SDL_GL_SwapBuffers();
 			
-			debugCheckError("Renderer.Render");
+			#if DEBUG
+			CheckForOpenGlError("Renderer.Render");
+			#endif
 			
 		}
 		
-		// DEBUG
-		private static void RenderToDisplayList(OpenBveApi.Geometry.Mesh mesh, int list) {
-			Gl.glNewList(DISPLAY_LIST, Gl.GL_COMPILE);
+		// render to display list
+		private static void RenderToDisplayList(OpenBveApi.Geometry.FaceVertexMesh mesh, int displayList) {
+			Gl.glNewList(displayList, Gl.GL_COMPILE);
 			for (int i = 0; i < mesh.Faces.Length; i++) {
+				int material = mesh.Faces[i].Material;
+				// texture
+				object daytimeTexture = mesh.Materials[material].DaytimeTexture.TextureData;
+				if (daytimeTexture is int) {
+					int openGlTextureIndex = Textures.UseTexture((int)daytimeTexture);
+					if (!State.TexturingEnabled) {
+						Gl.glEnable(Gl.GL_TEXTURE_2D);
+						State.TexturingEnabled = true;
+					}
+					if (State.TextureCurrentlyBound != openGlTextureIndex) {
+						Gl.glBindTexture(Gl.GL_TEXTURE_2D, openGlTextureIndex);
+						State.TextureCurrentlyBound = openGlTextureIndex;
+					}
+				} else {
+					if (State.TexturingEnabled) {
+						Gl.glDisable(Gl.GL_TEXTURE_2D);
+						State.TexturingEnabled = false;
+					}
+				}
+				// begin
 				switch (mesh.Faces[i].Type) {
 					case OpenBveApi.Geometry.FaceType.Triangles:
 						Gl.glBegin(Gl.GL_TRIANGLES);
@@ -116,19 +160,25 @@ namespace OpenBve {
 					default:
 						throw new InvalidOperationException();
 				}
+				// vertices
+				//Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_SPECULAR, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
+				//Gl.glMaterialf(Gl.GL_FRONT, Gl.GL_SHININESS, 100.0f);
 				for (int j = 0; j < mesh.Faces[i].Vertices.Length; j++) {
 					int vertex = mesh.Faces[i].Vertices[j].Vertex;
 					Gl.glColor3f(mesh.Vertices[vertex].ReflectiveColor.R, mesh.Vertices[vertex].ReflectiveColor.G, mesh.Vertices[vertex].ReflectiveColor.B);
+					Gl.glNormal3d(mesh.Vertices[vertex].Normal.X, mesh.Vertices[vertex].Normal.Y, mesh.Vertices[vertex].Normal.Z);
 					Gl.glTexCoord2d(mesh.Vertices[vertex].TextureCoordinates.X, mesh.Vertices[vertex].TextureCoordinates.Y);
 					Gl.glVertex3d(mesh.Vertices[vertex].SpatialCoordinates.X, mesh.Vertices[vertex].SpatialCoordinates.Y, mesh.Vertices[vertex].SpatialCoordinates.Z);
 				}
+				// end
 				Gl.glEnd();
 			}
 			Gl.glEndList();
 		}
 		
-		// DEBUG
-		private static void debugCheckError(string Location) {
+		// check for opengl error
+		#if DEBUG
+		private static void CheckForOpenGlError(string Location) {
 			int error = Gl.glGetError();
 			if (error != Gl.GL_NO_ERROR) {
 				Console.ForegroundColor = ConsoleColor.Red;
@@ -156,13 +206,14 @@ namespace OpenBve {
 						Console.WriteLine("GL_TABLE_TOO_LARGE");
 						break;
 					default:
-						Console.WriteLine(error.ToString());
+						Console.WriteLine("Unknown OpenGL error: " + error.ToString());
 						break;
 				}
 				Console.ForegroundColor = ConsoleColor.Gray;
 				Loop.Leave();
 			}
 		}
+		#endif
 		
 	}
 }

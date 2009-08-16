@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.Text;
 
 namespace OpenBveApi {
@@ -12,9 +11,8 @@ namespace OpenBveApi {
 		
 		/// <summary>Reports a problem to the host application.</summary>
 		/// <param name="type">The type of problem to be reported.</param>
-		/// <param name="data">A list of key-value pairs containing information about the problem.</param>
-		/// <remarks>Commonly used keys include "Source", "File", "Row", "Column", "Position" or "Text".</remarks>
-		void Report(General.ReportType type, params General.KeyValuePair[] data);
+		/// <param name="keyValuePairs">A list of key-value pairs containing information about the problem.</param>
+		void Report(General.ReportType type, params General.ReportKeyValuePair[] keyValuePairs);
 		
 		
 		// --- path ---
@@ -36,7 +34,7 @@ namespace OpenBveApi {
 		/// <param name="origin">The origin of the texture which includes a valid path.</param>
 		/// <param name="texture">Receives the texture.</param>
 		/// <returns>The success of the operation.</returns>
-		General.Result LoadTexture(General.Origin origin, out Bitmap texture);
+		General.Result LoadTexture(General.Origin origin, out Texture.TextureData texture);
 		
 		/// <summary>Registers a texture with the host application.</summary>
 		/// <param name="origin">The origin of the texture which includes a valid path.</param>
@@ -50,7 +48,7 @@ namespace OpenBveApi {
 		/// <param name="parameters">The parameters for the texture.</param>
 		/// <param name="handle">Receives a handle to the texture.</param>
 		/// <returns>The success of the operation.</returns>
-		General.Result RegisterTexture(Bitmap texture, Texture.TextureParameters parameters, out Texture.TextureHandle handle);
+		General.Result RegisterTexture(Texture.TextureData texture, Texture.TextureParameters parameters, out Texture.TextureHandle handle);
 		
 		
 		// --- objects ---

@@ -307,19 +307,52 @@
         <member name="F:OpenBveApi.General.ReportType.InvalidData">
             <summary>Invalid data was encountered.</summary>
         </member>
-        <member name="T:OpenBveApi.General.KeyValuePair">
-            <summary>Represents a key-value pair.</summary>
+        <member name="T:OpenBveApi.General.ReportKey">
+            <summary>Represents the kind of information in a key-value pair.</summary>
         </member>
-        <member name="F:OpenBveApi.General.KeyValuePair.Key">
-            <summary>The key.</summary>
+        <member name="F:OpenBveApi.General.ReportKey.SourcePath">
+            <summary>A string indicating the absolute path of the file or folder for which the report is filed.</summary>
         </member>
-        <member name="F:OpenBveApi.General.KeyValuePair.Value">
-            <summary>The value.</summary>
+        <member name="F:OpenBveApi.General.ReportKey.Row">
+            <summary>An integer indicating the row of a text file.</summary>
         </member>
-        <member name="M:OpenBveApi.General.KeyValuePair.#ctor(System.String,System.Object)">
+        <member name="F:OpenBveApi.General.ReportKey.Column">
+            <summary>An integer indicating the column of a text file in case of tabular data.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKey.Character">
+            <summary>An integer indicating the character position within a row of a text file.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKey.BytePosition">
+            <summary>An integer indicating the byte position in the file.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKey.Command">
+            <summary>A string indicating the name of a command related to the report.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKey.ArgumentIndex">
+            <summary>An integer indicating the index of an argument.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKey.ArgumentName">
+            <summary>A string indicating the name of an argument.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKey.ArgumentContent">
+            <summary>The data that is stored in the argument.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKey.Description">
+            <summary>A string providing a description for the report.</summary>
+        </member>
+        <member name="T:OpenBveApi.General.ReportKeyValuePair">
+            <summary>Represents a key-value pair which provides information in a report.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKeyValuePair.Key">
+            <summary>The key, representing the kind of information found in the value.</summary>
+        </member>
+        <member name="F:OpenBveApi.General.ReportKeyValuePair.Value">
+            <summary>The value in accordance with the key.</summary>
+        </member>
+        <member name="M:OpenBveApi.General.ReportKeyValuePair.#ctor(OpenBveApi.General.ReportKey,System.Object)">
             <summary>Creates a new instance of this structure.</summary>
-            <param name="key">The key.</param>
-            <param name="value">The value.</param>
+            <param name="key">The key, representing the kind of information found in the value.</param>
+            <param name="value">The value in accordance with the key.</param>
         </member>
         <member name="T:OpenBveApi.General.PluginReference">
             <summary>Represents a reference to a plugin along with associated data.</summary>
@@ -409,11 +442,11 @@
         <member name="F:OpenBveApi.Geometry.Vertex.ReflectiveColor">
             <summary>The reflective color.</summary>
         </member>
-        <member name="M:OpenBveApi.Geometry.Vertex.#ctor(OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector2,OpenBveApi.Math.Vector3,OpenBveApi.Color.ColorRGBA)">
+        <member name="M:OpenBveApi.Geometry.Vertex.#ctor(OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector2,OpenBveApi.Color.ColorRGBA)">
             <summary>Creates a new instance of this structure.</summary>
             <param name="spatialCoordinates">The spatial coordinates.</param>
-            <param name="textureCoordinates">The texture coordinates.</param>
             <param name="normal">The surface normal.</param>
+            <param name="textureCoordinates">The texture coordinates.</param>
             <param name="reflectiveColor">The reflective color.</param>
         </member>
         <member name="T:OpenBveApi.Geometry.Material">
@@ -488,58 +521,57 @@
         <member name="M:OpenBveApi.Geometry.Face.Flip">
             <summary>Flips the front and back of the face.</summary>
         </member>
-        <member name="T:OpenBveApi.Geometry.Mesh">
-            <summary>Represents a mesh.</summary>
+        <member name="T:OpenBveApi.Geometry.FaceVertexMesh">
+            <summary>Represents a face-vertex mesh.</summary>
         </member>
-        <member name="F:OpenBveApi.Geometry.Mesh.Vertices">
+        <member name="F:OpenBveApi.Geometry.FaceVertexMesh.Vertices">
             <summary>A list of vertices.</summary>
         </member>
-        <member name="F:OpenBveApi.Geometry.Mesh.Materials">
+        <member name="F:OpenBveApi.Geometry.FaceVertexMesh.Materials">
             <summary>A list of materials.</summary>
         </member>
-        <member name="F:OpenBveApi.Geometry.Mesh.Faces">
+        <member name="F:OpenBveApi.Geometry.FaceVertexMesh.Faces">
             <summary>A list of faces.</summary>
         </member>
-        <member name="M:OpenBveApi.Geometry.Mesh.#ctor">
+        <member name="M:OpenBveApi.Geometry.FaceVertexMesh.#ctor">
             <summary>Creates an empty mesh.</summary>
         </member>
-        <member name="M:OpenBveApi.Geometry.Mesh.#ctor(OpenBveApi.Geometry.Vertex[],OpenBveApi.Geometry.Material[],OpenBveApi.Geometry.Face[])">
+        <member name="M:OpenBveApi.Geometry.FaceVertexMesh.#ctor(OpenBveApi.Geometry.Vertex[],OpenBveApi.Geometry.Material[],OpenBveApi.Geometry.Face[])">
             <summary>Creates a new instance of this class.</summary>
             <param name="vertices">A list of vertices.</param>
             <param name="materials">A list of materials.</param>
             <param name="faces">A list of faces.</param>
         </member>
-        <member name="M:OpenBveApi.Geometry.Mesh.Translate(OpenBveApi.Math.Vector3)">
+        <member name="M:OpenBveApi.Geometry.FaceVertexMesh.Translate(OpenBveApi.Math.Vector3)">
             <summary>Translates the mesh.</summary>
             <param name="offset">The offset by which to translate.</param>
         </member>
-        <member name="M:OpenBveApi.Geometry.Mesh.Translate(OpenBveApi.Math.Orientation3,OpenBveApi.Math.Vector3)">
+        <member name="M:OpenBveApi.Geometry.FaceVertexMesh.Translate(OpenBveApi.Math.Orientation3,OpenBveApi.Math.Vector3)">
             <summary>Translates the object.</summary>
             <param name="orientation">The orientation along which to translate.</param>
             <param name="offset">The offset relative to the orientation by which to translate.</param>
         </member>
-        <member name="M:OpenBveApi.Geometry.Mesh.Scale(OpenBveApi.Math.Vector3)">
+        <member name="M:OpenBveApi.Geometry.FaceVertexMesh.Scale(OpenBveApi.Math.Vector3)">
             <summary>Scales the mesh.</summary>
             <param name="factor">The factor by which to scale.</param>
         </member>
-        <member name="M:OpenBveApi.Geometry.Mesh.Rotate(OpenBveApi.Math.Vector3,System.Double,System.Double)">
+        <member name="M:OpenBveApi.Geometry.FaceVertexMesh.Rotate(OpenBveApi.Math.Vector3,System.Double,System.Double)">
             <summary>Rotates the mesh.</summary>
             <param name="direction">The direction perpendicular to the plane on which to rotate.</param>
             <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
             <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
         </member>
-        <member name="M:OpenBveApi.Geometry.Mesh.Add(OpenBveApi.Geometry.Mesh)">
+        <member name="M:OpenBveApi.Geometry.FaceVertexMesh.Add(OpenBveApi.Geometry.FaceVertexMesh)">
             <summary>Adds another mesh to this instance of a mesh.</summary>
             <param name="mesh">The mesh to add.</param>
         </member>
         <member name="T:OpenBveApi.IHost">
             <summary>Exposes the interface to be implemented by the host application.</summary>
         </member>
-        <member name="M:OpenBveApi.IHost.Report(OpenBveApi.General.ReportType,OpenBveApi.General.KeyValuePair[])">
+        <member name="M:OpenBveApi.IHost.Report(OpenBveApi.General.ReportType,OpenBveApi.General.ReportKeyValuePair[])">
             <summary>Reports a problem to the host application.</summary>
             <param name="type">The type of problem to be reported.</param>
-            <param name="data">A list of key-value pairs containing information about the problem.</param>
-            <remarks>Commonly used keys include "Source", "File", "Row", "Column", "Position" or "Text".</remarks>
+            <param name="keyValuePairs">A list of key-value pairs containing information about the problem.</param>
         </member>
         <member name="M:OpenBveApi.IHost.Resolve(OpenBveApi.Path.PathReference)">
             <summary>Resolves a file or folder reference into a platform-specific absolute path.</summary>
@@ -549,7 +581,7 @@
         <member name="T:OpenBveApi.IHost10">
             <summary>Exposes version 1.0 of the interface to be implemented by the host application.</summary>
         </member>
-        <member name="M:OpenBveApi.IHost10.LoadTexture(OpenBveApi.General.Origin,System.Drawing.Bitmap@)">
+        <member name="M:OpenBveApi.IHost10.LoadTexture(OpenBveApi.General.Origin,OpenBveApi.Texture.TextureData@)">
             <summary>Loads a texture suitable for post-processing.</summary>
             <param name="origin">The origin of the texture which includes a valid path.</param>
             <param name="texture">Receives the texture.</param>
@@ -562,7 +594,7 @@
             <param name="handle">Receives a handle to the texture.</param>
             <returns>The success of the operation.</returns>
         </member>
-        <member name="M:OpenBveApi.IHost10.RegisterTexture(System.Drawing.Bitmap,OpenBveApi.Texture.TextureParameters,OpenBveApi.Texture.TextureHandle@)">
+        <member name="M:OpenBveApi.IHost10.RegisterTexture(OpenBveApi.Texture.TextureData,OpenBveApi.Texture.TextureParameters,OpenBveApi.Texture.TextureHandle@)">
             <summary>Registers a texture with the host application.</summary>
             <param name="texture">The texture to register.</param>
             <param name="parameters">The parameters for the texture.</param>
@@ -648,7 +680,7 @@
         </member>
         <member name="M:OpenBveApi.Math.Vector2.op_UnaryNegation(OpenBveApi.Math.Vector2)">
             <summary>Negates a vector.</summary>
-            <param name="a">The vector.</param>
+            <param name="vector">The vector.</param>
             <returns>The negation of the vector.</returns>
         </member>
         <member name="M:OpenBveApi.Math.Vector2.op_Multiply(OpenBveApi.Math.Vector2,OpenBveApi.Math.Vector2)">
@@ -719,14 +751,30 @@
         </member>
         <member name="M:OpenBveApi.Math.Vector2.Cross(OpenBveApi.Math.Vector2)">
             <summary>Gives the cross product of a vector.</summary>
-            <param name="a">The vector.</param>
+            <param name="vector">The vector.</param>
             <returns>The cross product of the vector.</returns>
         </member>
         <member name="M:OpenBveApi.Math.Vector2.Normalize(OpenBveApi.Math.Vector2)">
             <summary>Normalizes a vector.</summary>
-            <param name="a">The vector.</param>
+            <param name="vector">The vector to normalize.</param>
             <returns>The normalized vector.</returns>
             <exception cref="T:System.DivideByZeroException">Raised when the vector is a null vector.</exception>
+        </member>
+        <member name="M:OpenBveApi.Math.Vector2.Normalize(OpenBveApi.Math.Vector2,OpenBveApi.Math.Vector2)">
+            <summary>Normalizes a vector.</summary>
+            <param name="vector">The vector to normalize.</param>
+            <param name="fallback">The fallback value to return in case the vector is a null vector.</param>
+            <returns>The normalized vector.</returns>
+        </member>
+        <member name="M:OpenBveApi.Math.Vector2.Normalize(OpenBveApi.Math.Vector2@)">
+            <summary>Normalizes a vector.</summary>
+            <param name="vector">The vector to normalize.</param>
+            <exception cref="T:System.DivideByZeroException">Raised when the vector is a null vector.</exception>
+        </member>
+        <member name="M:OpenBveApi.Math.Vector2.Normalize(OpenBveApi.Math.Vector2@,OpenBveApi.Math.Vector2)">
+            <summary>Normalizes a vector.</summary>
+            <param name="vector">The vector to normalize.</param>
+            <param name="fallback">The fallback value to return in case the vector is a null vector.</param>
         </member>
         <member name="M:OpenBveApi.Math.Vector2.Rotate(OpenBveApi.Math.Vector2,System.Double,System.Double)">
             <summary>Rotates a vector.</summary>
@@ -734,6 +782,27 @@
             <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
             <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
             <returns>The rotated vector.</returns>
+        </member>
+        <member name="M:OpenBveApi.Math.Vector2.Rotate(OpenBveApi.Math.Vector2@,System.Double,System.Double)">
+            <summary>Rotates a vector.</summary>
+            <param name="vector">The vector to rotate.</param>
+            <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
+            <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector2.Null">
+            <summary>The null vector, i.e. a vector with all coordinates set to zero.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector2.Left">
+            <summary>A vector of unit length pointing left, i.e. with its X-coordinate set to -1.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector2.Right">
+            <summary>A vector of unit length pointing right, i.e. with its X-coordinate set to 1.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector2.Down">
+            <summary>A vector of unit length pointing down, i.e. with its Y-coordinate set to -1.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector2.Up">
+            <summary>A vector of unit length pointing up, i.e. with its Y-coordinate set to 1.</summary>
         </member>
         <member name="T:OpenBveApi.Math.Vector3">
             <summary>Represents a three-dimensional vector.</summary>
@@ -791,7 +860,7 @@
         </member>
         <member name="M:OpenBveApi.Math.Vector3.op_UnaryNegation(OpenBveApi.Math.Vector3)">
             <summary>Negates a vector.</summary>
-            <param name="a">The vector.</param>
+            <param name="vector">The vector.</param>
             <returns>The negation of the vector.</returns>
         </member>
         <member name="M:OpenBveApi.Math.Vector3.op_Multiply(OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3)">
@@ -868,18 +937,29 @@
         </member>
         <member name="M:OpenBveApi.Math.Vector3.Normalize(OpenBveApi.Math.Vector3)">
             <summary>Normalizes a vector.</summary>
-            <param name="a">The vector.</param>
+            <param name="vector">The vector to normalize.</param>
             <returns>The normalized vector.</returns>
             <exception cref="T:System.DivideByZeroException">Raised when the vector is a null vector.</exception>
         </member>
+        <member name="M:OpenBveApi.Math.Vector3.Normalize(OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3)">
+            <summary>Normalizes a vector.</summary>
+            <param name="vector">The vector to normalize.</param>
+            <param name="fallback">The fallback value to return in case the vector is a null vector.</param>
+            <returns>The normalized vector.</returns>
+        </member>
         <member name="M:OpenBveApi.Math.Vector3.Normalize(OpenBveApi.Math.Vector3@)">
             <summary>Normalizes a vector.</summary>
-            <param name="a">The vector.</param>
+            <param name="vector">The vector to normalize.</param>
             <exception cref="T:System.DivideByZeroException">Raised when the vector is a null vector.</exception>
+        </member>
+        <member name="M:OpenBveApi.Math.Vector3.Normalize(OpenBveApi.Math.Vector3@,OpenBveApi.Math.Vector3)">
+            <summary>Normalizes a vector.</summary>
+            <param name="vector">The vector to normalize.</param>
+            <param name="fallback">The fallback value to return in case the vector is a null vector.</param>
         </member>
         <member name="M:OpenBveApi.Math.Vector3.Rotate(OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3,System.Double,System.Double)">
             <summary>Rotates a vector on the plane perpendicular to a specified direction.</summary>
-            <param name="a">The vector to rotate.</param>
+            <param name="vector">The vector to rotate.</param>
             <param name="direction">The direction perpendicular to the plane on which to rotate.</param>
             <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
             <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
@@ -887,22 +967,95 @@
         </member>
         <member name="M:OpenBveApi.Math.Vector3.Rotate(OpenBveApi.Math.Vector3@,OpenBveApi.Math.Vector3,System.Double,System.Double)">
             <summary>Rotates a vector on the plane perpendicular to a specified direction.</summary>
-            <param name="a">The vector to rotate.</param>
+            <param name="vector">The vector to rotate.</param>
             <param name="direction">The direction perpendicular to the plane on which to rotate.</param>
             <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
             <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
         </member>
+        <member name="M:OpenBveApi.Math.Vector3.Shear(OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3)">
+            <summary>Shears a vector by conceptually slicing an object up along a direction and then displacing those slices along another direction.</summary>
+            <param name="vector">The vector to shear.</param>
+            <param name="sliceDirection">The direction along which slices perpendicular to this direction are displaced.</param>
+            <param name="displacementDirection">The direction into which slices are displaced.</param>
+            <returns>The sheared vector.</returns>
+        </member>
+        <member name="M:OpenBveApi.Math.Vector3.Shear(OpenBveApi.Math.Vector3@,OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3)">
+            <summary>Shears a vector by conceptually slicing an object up along a direction and then displacing those slices along another direction.</summary>
+            <param name="vector">The vector to shear.</param>
+            <param name="sliceDirection">The direction along which slices perpendicular to this direction are displaced.</param>
+            <param name="displacementDirection">The direction into which slices are displaced.</param>
+        </member>
         <member name="M:OpenBveApi.Math.Vector3.CreateNormal(OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3)">
-            <summary>Creates a vertor perpendicular to the plane described by three specified vectors, suitable for being a surface normal.</summary>
-            <param name="a">The first vector to describe a plane.</param>
-            <param name="b">The second vector to describe a plane.</param>
-            <param name="c">The third vector to describe a plane.</param>
+            <summary>Creates a vertor perpendicular to the plane described by three spatial coordinates, suitable for being a surface normal.</summary>
+            <param name="a">The first spatial coordinate to describe a plane.</param>
+            <param name="b">The second spatial coordinate to describe a plane.</param>
+            <param name="c">The third spatial coordinate to describe a plane.</param>
             <returns>The vector perpendicular to the described plane.</returns>
-            <exception cref="T:System.DivideByZeroException">Raised when the specified vertices do not describe a plane.</exception>
+            <exception cref="T:System.DivideByZeroException">Raised when the specified spatial coordinates do not describe a plane.</exception>
+        </member>
+        <member name="M:OpenBveApi.Math.Vector3.AreColinear(OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3,OpenBveApi.Math.Vector3)">
+            <summary>Checks whether three spatial coordinates are colinear, i.e. form a straight line.</summary>
+            <param name="a">The first spatial coordinate.</param>
+            <param name="b">The second spatial coordinate.</param>
+            <param name="c">The third spatial coordinate.</param>
+        </member>
+        <member name="M:OpenBveApi.Math.Vector3.IsNullVector(OpenBveApi.Math.Vector3)">
+            <summary>Checks whether a vector is a null vector.</summary>
+            <returns>A boolean indicating whether the vector is a null vector.</returns>
         </member>
         <member name="M:OpenBveApi.Math.Vector3.IsNullVector">
             <summary>Checks whether this instance of a vector is a null vector.</summary>
             <returns>A boolean indicating whether this instance of a vector is a null vector.</returns>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector3.Null">
+            <summary>The null vector, i.e. a vector with all coordinates set to zero.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector3.Left">
+            <summary>A vector of unit length pointing left, i.e. with its X-coordinate set to -1.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector3.Right">
+            <summary>A vector of unit length pointing right, i.e. with its X-coordinate set to 1.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector3.Down">
+            <summary>A vector of unit length pointing down, i.e. with its Y-coordinate set to -1.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector3.Up">
+            <summary>A vector of unit length pointing up, i.e. with its Y-coordinate set to 1.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector3.Backward">
+            <summary>A vector of unit length pointing backward, i.e. with its Z-coordinate set to -1.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Vector3.Forward">
+            <summary>A vector of unit length pointing forward, i.e. with its Z-coordinate set to 1.</summary>
+        </member>
+        <member name="T:OpenBveApi.Math.Orientation2">
+            <summary>Represents a two-dimensional orientation, consisting of two perpendicular, normalized vectors.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Orientation2.X">
+            <summary>The vector pointing right.</summary>
+        </member>
+        <member name="F:OpenBveApi.Math.Orientation2.Y">
+            <summary>The vector pointing up.</summary>
+        </member>
+        <member name="M:OpenBveApi.Math.Orientation2.#ctor(OpenBveApi.Math.Vector2,OpenBveApi.Math.Vector2)">
+            <summary>Creates a new instance of this structure.</summary>
+            <param name="x">The vector pointing right.</param>
+            <param name="y">The vector pointing up.</param>
+        </member>
+        <member name="M:OpenBveApi.Math.Orientation2.op_UnaryNegation(OpenBveApi.Math.Orientation2)">
+            <summary>Negates an orientation.</summary>
+            <param name="orientation">The orientation.</param>
+            <returns>The negation of the orientation.</returns>
+        </member>
+        <member name="M:OpenBveApi.Math.Orientation2.Rotate(OpenBveApi.Math.Orientation2,System.Double,System.Double)">
+            <summary>Rotates an orientation on the plane perpendicular to a specified direction.</summary>
+            <param name="orientation">The orientation to rotate.</param>
+            <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
+            <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
+            <returns>The rotated vector.</returns>
+        </member>
+        <member name="F:OpenBveApi.Math.Orientation2.Default">
+            <summary>The default orientation with X = {1, 0} and Y = {0, 1}.</summary>
         </member>
         <member name="T:OpenBveApi.Math.Orientation3">
             <summary>Represents a three-dimensional orientation, consisting of three perpendicular, normalized vectors.</summary>
@@ -1049,7 +1202,7 @@
             <param name="data">Optional data passed from another plugin. If you access this field, you must check the type before casting to that type.</param>
             <returns>The priority at which the plugin supports loading the specified texture.</returns>
         </member>
-        <member name="M:OpenBveApi.IPlugin10.LoadTexture(OpenBveApi.Path.PathType,System.String,System.Text.Encoding,System.Object,System.Drawing.Bitmap@)">
+        <member name="M:OpenBveApi.IPlugin10.LoadTexture(OpenBveApi.Path.PathType,System.String,System.Text.Encoding,System.Object,OpenBveApi.Texture.TextureData@)">
             <summary>Loads a texture into an output parameter and returns the success of the operation.</summary>
             <param name="type">The type of the path, i.e. a file or a folder.</param>
             <param name="path">The absolute path of the file or folder where the texture is stored.</param>
@@ -1138,26 +1291,51 @@
         <member name="T:OpenBveApi.Sound.SoundHandle">
             <summary>Represents a handle to a sound as obtained from the host application.</summary>
         </member>
-        <member name="F:OpenBveApi.Sound.SoundHandle.Allocated">
-            <summary>Indicates whether the handle has been allocated.</summary>
+        <member name="F:OpenBveApi.Sound.SoundHandle.SoundData">
+            <summary>Data by which the host application can identify the sound this handle points to, or a null reference.</summary>
         </member>
-        <member name="F:OpenBveApi.Sound.SoundHandle.SoundIndex">
-            <summary>An integer that identifies the sound.</summary>
-        </member>
-        <member name="F:OpenBveApi.Sound.SoundHandle.PluginIndex">
-            <summary>An integer that identifies the plugin which loaded the sound.</summary>
-        </member>
-        <member name="M:OpenBveApi.Sound.SoundHandle.#ctor(System.Boolean,System.Int32,System.Int32)">
+        <member name="M:OpenBveApi.Sound.SoundHandle.#ctor(System.Object)">
             <summary>Creates a new instance of this structure.</summary>
-            <param name="allocated">Indicates whether the handle has been allocated.</param>
-            <param name="soundIndex">An integer that identifies the sound.</param>
-            <param name="pluginIndex">An integer that identifies the plugin which loaded the sound.</param>
+            <param name="SoundData">Data by which the host application can identify the sound this handle points to, or a null reference.</param>
         </member>
         <member name="F:OpenBveApi.Sound.SoundHandle.Null">
             <summary>Represents a handle that has not been allocated by the host application.</summary>
         </member>
         <member name="T:OpenBveApi.Texture">
             <summary>Provides support for textures.</summary>
+        </member>
+        <member name="T:OpenBveApi.Texture.TextureFormat">
+            <summary>Represents a texture format.</summary>
+        </member>
+        <member name="F:OpenBveApi.Texture.TextureFormat.Width">
+            <summary>The width.</summary>
+        </member>
+        <member name="F:OpenBveApi.Texture.TextureFormat.Height">
+            <summary>The height.</summary>
+        </member>
+        <member name="F:OpenBveApi.Texture.TextureFormat.BitsPerChannel">
+            <summary>The number of bits per channel. Allowed values are 8 or 16.</summary>
+        </member>
+        <member name="M:OpenBveApi.Texture.TextureFormat.#ctor(System.Int32,System.Int32,System.Int32)">
+            <summary>Creates a new instance of this structure.</summary>
+            <param name="width">The width.</param>
+            <param name="height">The height.</param>
+            <param name="bitsPerChannel">The number of bits per channel. Allowed values are 8 or 16.</param>
+        </member>
+        <member name="T:OpenBveApi.Texture.TextureData">
+            <summary>Represents texture raw data.</summary>
+        </member>
+        <member name="F:OpenBveApi.Texture.TextureData.Format">
+            <summary>The texture format of the raw data.</summary>
+        </member>
+        <member name="F:OpenBveApi.Texture.TextureData.Bytes">
+            <summary>The byte raw data, stored row-based from top to bottom, and within a row from left to right, with each pixel in RGBA form. With more than 8 bits per channel, each channel is stored in little endian byte order.</summary>
+            <remarks>Each channel can take values from 0 to 255 (8 bits per channel), or 0 to 65535 (16 bits per channel), with 0 representing no contribution / transparency, and 255/65535 representing full contribution / opaqueness.</remarks>
+        </member>
+        <member name="M:OpenBveApi.Texture.TextureData.#ctor(OpenBveApi.Texture.TextureFormat,System.Byte[])">
+            <summary>Creates a new instance of this class.</summary>
+            <param name="format">The texture format of the raw data.</param>
+            <param name="bytes">The byte raw data, stored row-based from top to bottom, and within a row from left to right.</param>
         </member>
         <member name="T:OpenBveApi.Texture.TextureWrapMode">
             <summary>Represents how the texture should wrap at edges.</summary>

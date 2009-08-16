@@ -48,25 +48,17 @@ namespace OpenBveApi {
 		/// <summary>Represents a handle to a sound as obtained from the host application.</summary>
 		public struct SoundHandle {
 			// members
-			/// <summary>Indicates whether the handle has been allocated.</summary>
-			internal bool Allocated;
-			/// <summary>An integer that identifies the sound.</summary>
-			internal int SoundIndex;
-			/// <summary>An integer that identifies the plugin which loaded the sound.</summary>
-			internal int PluginIndex;
+			/// <summary>Data by which the host application can identify the sound this handle points to, or a null reference.</summary>
+			public object SoundData;
 			// constructors
 			/// <summary>Creates a new instance of this structure.</summary>
-			/// <param name="allocated">Indicates whether the handle has been allocated.</param>
-			/// <param name="soundIndex">An integer that identifies the sound.</param>
-			/// <param name="pluginIndex">An integer that identifies the plugin which loaded the sound.</param>
-			internal SoundHandle(bool allocated, int soundIndex, int pluginIndex) {
-				this.Allocated = allocated;
-				this.SoundIndex = soundIndex;
-				this.PluginIndex = pluginIndex;
+			/// <param name="SoundData">Data by which the host application can identify the sound this handle points to, or a null reference.</param>
+			public SoundHandle(object SoundData) {
+				this.SoundData = SoundData;
 			}
 			// read-only fields
 			/// <summary>Represents a handle that has not been allocated by the host application.</summary>
-			public static readonly SoundHandle Null = new SoundHandle(false, 0, 0);
+			public static readonly SoundHandle Null = new SoundHandle(null);
 		}
 
 		

@@ -4,6 +4,47 @@ namespace OpenBveApi {
 	/// <summary>Provides support for textures.</summary>
 	public static class Texture {
 		
+		// texture format
+		/// <summary>Represents a texture format.</summary>
+		public struct TextureFormat {
+			// members
+			/// <summary>The width.</summary>
+			public int Width;
+			/// <summary>The height.</summary>
+			public int Height;
+			/// <summary>The number of bits per channel. Allowed values are 8 or 16.</summary>
+			public int BitsPerChannel;
+			// constructors
+			/// <summary>Creates a new instance of this structure.</summary>
+			/// <param name="width">The width.</param>
+			/// <param name="height">The height.</param>
+			/// <param name="bitsPerChannel">The number of bits per channel. Allowed values are 8 or 16.</param>
+			public TextureFormat(int width, int height, int bitsPerChannel) {
+				this.Width = width;
+				this.Height = height;
+				this.BitsPerChannel = bitsPerChannel;
+			}
+		}
+		
+		// texture data
+		/// <summary>Represents texture raw data.</summary>
+		public class TextureData {
+			// members
+			/// <summary>The texture format of the raw data.</summary>
+			public TextureFormat Format;
+			/// <summary>The byte raw data, stored row-based from top to bottom, and within a row from left to right, with each pixel in RGBA form. With more than 8 bits per channel, each channel is stored in little endian byte order.</summary>
+			/// <remarks>Each channel can take values from 0 to 255 (8 bits per channel), or 0 to 65535 (16 bits per channel), with 0 representing no contribution / transparency, and 255/65535 representing full contribution / opaqueness.</remarks>
+			public byte[] Bytes;
+			// constructors
+			/// <summary>Creates a new instance of this class.</summary>
+			/// <param name="format">The texture format of the raw data.</param>
+			/// <param name="bytes">The byte raw data, stored row-based from top to bottom, and within a row from left to right.</param>
+			public TextureData(TextureFormat format, byte[] bytes) {
+				this.Format = format;
+				this.Bytes = bytes;
+			}
+		}
+		
 		// texture wrap mode
 		/// <summary>Represents how the texture should wrap at edges.</summary>
 		public enum TextureWrapMode {
@@ -99,11 +140,11 @@ namespace OpenBveApi {
 		public struct TextureHandle {
 			// members
 			/// <summary>Data by which the host application can identify the texture this handle points to, or a null reference.</summary>
-			internal object TextureData;
+			public object TextureData;
 			// constructors
 			/// <summary>Creates a new instance of this structure.</summary>
 			/// <param name="textureData">Data by which the host application can identify the texture this handle points to, or a null reference.</param>
-			internal TextureHandle(object textureData) {
+			public TextureHandle(object textureData) {
 				this.TextureData = textureData;
 			}
 			// read-only fields

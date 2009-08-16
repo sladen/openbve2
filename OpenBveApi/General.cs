@@ -53,19 +53,44 @@ namespace OpenBveApi {
 			InvalidData = 2
 		}
 		
-		// key value pair
-		/// <summary>Represents a key-value pair.</summary>
-		public struct KeyValuePair {
+		// report key
+		/// <summary>Represents the kind of information in a key-value pair.</summary>
+		public enum ReportKey {
+			/// <summary>A string indicating the absolute path of the file or folder for which the report is filed.</summary>
+			SourcePath = 1,
+			/// <summary>An integer indicating the row of a text file.</summary>
+			Row = 2,
+			/// <summary>An integer indicating the column of a text file in case of tabular data.</summary>
+			Column = 3,
+			/// <summary>An integer indicating the character position within a row of a text file.</summary>
+			Character = 4,
+			/// <summary>An integer indicating the byte position in the file.</summary>
+			BytePosition = 5,
+			/// <summary>A string indicating the name of a command related to the report.</summary>
+			Command = 6,
+			/// <summary>An integer indicating the index of an argument.</summary>
+			ArgumentIndex = 7,
+			/// <summary>A string indicating the name of an argument.</summary>
+			ArgumentName = 8,
+			/// <summary>The data that is stored in the argument.</summary>
+			ArgumentContent = 9,
+			/// <summary>A string providing a description for the report.</summary>
+			Description = 10
+		}
+		
+		// report data
+		/// <summary>Represents a key-value pair which provides information in a report.</summary>
+		public struct ReportKeyValuePair {
 			// members
-			/// <summary>The key.</summary>
-			public string Key;
-			/// <summary>The value.</summary>
+			/// <summary>The key, representing the kind of information found in the value.</summary>
+			public ReportKey Key;
+			/// <summary>The value in accordance with the key.</summary>
 			public object Value;
 			// constructors
 			/// <summary>Creates a new instance of this structure.</summary>
-			/// <param name="key">The key.</param>
-			/// <param name="value">The value.</param>
-			public KeyValuePair(string key, object value) {
+			/// <param name="key">The key, representing the kind of information found in the value.</param>
+			/// <param name="value">The value in accordance with the key.</param>
+			public ReportKeyValuePair(ReportKey key, object value) {
 				this.Key = key;
 				this.Value = value;
 			}

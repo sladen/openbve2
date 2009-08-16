@@ -48,13 +48,13 @@ namespace OpenBveApi {
 			// constructors
 			/// <summary>Creates a new instance of this structure.</summary>
 			/// <param name="spatialCoordinates">The spatial coordinates.</param>
-			/// <param name="textureCoordinates">The texture coordinates.</param>
 			/// <param name="normal">The surface normal.</param>
+			/// <param name="textureCoordinates">The texture coordinates.</param>
 			/// <param name="reflectiveColor">The reflective color.</param>
-			public Vertex(Math.Vector3 spatialCoordinates, Math.Vector2 textureCoordinates, Math.Vector3 normal, Color.ColorRGBA reflectiveColor) {
+			public Vertex(Math.Vector3 spatialCoordinates, Math.Vector3 normal, Math.Vector2 textureCoordinates, Color.ColorRGBA reflectiveColor) {
 				this.SpatialCoordinates = spatialCoordinates;
-				this.TextureCoordinates = textureCoordinates;
 				this.Normal = normal;
+				this.TextureCoordinates = textureCoordinates;
 				this.ReflectiveColor = reflectiveColor;
 			}
 		}
@@ -165,8 +165,8 @@ namespace OpenBveApi {
 		}
 		
 		// mesh
-		/// <summary>Represents a mesh.</summary>
-		public class Mesh : StaticObject {
+		/// <summary>Represents a face-vertex mesh.</summary>
+		public class FaceVertexMesh : StaticObject {
 			// members
 			/// <summary>A list of vertices.</summary>
 			public Vertex[] Vertices;
@@ -176,7 +176,7 @@ namespace OpenBveApi {
 			public Face[] Faces;
 			// constructors
 			/// <summary>Creates an empty mesh.</summary>
-			public Mesh() {
+			public FaceVertexMesh() {
 				this.Vertices = new Vertex[] { };
 				this.Materials = new Material[] { };
 				this.Faces = new Face[] { };
@@ -185,7 +185,7 @@ namespace OpenBveApi {
 			/// <param name="vertices">A list of vertices.</param>
 			/// <param name="materials">A list of materials.</param>
 			/// <param name="faces">A list of faces.</param>
-			public Mesh(Vertex[] vertices, Material[] materials, Face[] faces) {
+			public FaceVertexMesh(Vertex[] vertices, Material[] materials, Face[] faces) {
 				this.Vertices = vertices;
 				this.Materials = materials;
 				this.Faces = faces;
@@ -253,7 +253,7 @@ namespace OpenBveApi {
 			}
 			/// <summary>Adds another mesh to this instance of a mesh.</summary>
 			/// <param name="mesh">The mesh to add.</param>
-			public void Add(Mesh mesh) {
+			public void Add(FaceVertexMesh mesh) {
 				int vertices = this.Vertices.Length;
 				int materials = this.Materials.Length;
 				int faces = this.Faces.Length;

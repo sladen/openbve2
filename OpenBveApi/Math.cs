@@ -64,10 +64,10 @@ namespace OpenBveApi {
 				return new Vector2(a - b.X, a - b.Y);
 			}
 			/// <summary>Negates a vector.</summary>
-			/// <param name="a">The vector.</param>
+			/// <param name="vector">The vector.</param>
 			/// <returns>The negation of the vector.</returns>
-			public static Vector2 operator -(Vector2 a) {
-				return new Vector2(-a.X, -a.Y);
+			public static Vector2 operator -(Vector2 vector) {
+				return new Vector2(-vector.X, -vector.Y);
 			}
 			/// <summary>Multiplies two vectors.</summary>
 			/// <param name="a">The first vector.</param>
@@ -167,22 +167,61 @@ namespace OpenBveApi {
 				return a.X * b.X + a.Y * b.Y;
 			}
 			/// <summary>Gives the cross product of a vector.</summary>
-			/// <param name="a">The vector.</param>
+			/// <param name="vector">The vector.</param>
 			/// <returns>The cross product of the vector.</returns>
-			public static Vector2 Cross(Vector2 a) {
-				return new Vector2(-a.Y, a.X);
+			public static Vector2 Cross(Vector2 vector) {
+				return new Vector2(-vector.Y, vector.X);
 			}
 			/// <summary>Normalizes a vector.</summary>
-			/// <param name="a">The vector.</param>
+			/// <param name="vector">The vector to normalize.</param>
 			/// <returns>The normalized vector.</returns>
 			/// <exception cref="DivideByZeroException">Raised when the vector is a null vector.</exception>
-			public static Vector2 Normalize(Vector2 a) {
-				double norm = a.X * a.X + a.Y * a.Y;
+			public static Vector2 Normalize(Vector2 vector) {
+				double norm = vector.X * vector.X + vector.Y * vector.Y;
 				if (norm == 0.0) {
 					throw new DivideByZeroException();
 				} else {
 					double factor = 1.0 / System.Math.Sqrt(norm);
-					return new Vector2(a.X * factor, a.Y * factor);
+					return new Vector2(vector.X * factor, vector.Y * factor);
+				}
+			}
+			/// <summary>Normalizes a vector.</summary>
+			/// <param name="vector">The vector to normalize.</param>
+			/// <param name="fallback">The fallback value to return in case the vector is a null vector.</param>
+			/// <returns>The normalized vector.</returns>
+			public static Vector2 Normalize(Vector2 vector, Vector2 fallback) {
+				double norm = vector.X * vector.X + vector.Y * vector.Y;
+				if (norm == 0.0) {
+					return fallback;
+				} else {
+					double factor = 1.0 / System.Math.Sqrt(norm);
+					return new Vector2(vector.X * factor, vector.Y * factor);
+				}
+			}
+			/// <summary>Normalizes a vector.</summary>
+			/// <param name="vector">The vector to normalize.</param>
+			/// <exception cref="DivideByZeroException">Raised when the vector is a null vector.</exception>
+			public static void Normalize(ref Vector2 vector) {
+				double norm = vector.X * vector.X + vector.Y * vector.Y;
+				if (norm == 0.0) {
+					throw new DivideByZeroException();
+				} else {
+					double factor = 1.0 / System.Math.Sqrt(norm);
+					vector.X *= factor;
+					vector.Y *= factor;
+				}
+			}
+			/// <summary>Normalizes a vector.</summary>
+			/// <param name="vector">The vector to normalize.</param>
+			/// <param name="fallback">The fallback value to return in case the vector is a null vector.</param>
+			public static void Normalize(ref Vector2 vector, Vector2 fallback) {
+				double norm = vector.X * vector.X + vector.Y * vector.Y;
+				if (norm == 0.0) {
+					vector = fallback;
+				} else {
+					double factor = 1.0 / System.Math.Sqrt(norm);
+					vector.X *= factor;
+					vector.Y *= factor;
 				}
 			}
 			/// <summary>Rotates a vector.</summary>
@@ -195,6 +234,26 @@ namespace OpenBveApi {
 				double y = vector.X * sineOfAngle + vector.Y * cosineOfAngle;
 				return new Vector2(x, y);
 			}
+			/// <summary>Rotates a vector.</summary>
+			/// <param name="vector">The vector to rotate.</param>
+			/// <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
+			/// <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
+			public static void Rotate(ref Vector2 vector, double cosineOfAngle, double sineOfAngle) {
+				double x = vector.X * cosineOfAngle - vector.Y * sineOfAngle;
+				double y = vector.X * sineOfAngle + vector.Y * cosineOfAngle;
+				vector = new Vector2(x, y);
+			}
+			// fields
+			/// <summary>The null vector, i.e. a vector with all coordinates set to zero.</summary>
+			public static readonly Vector2 Null = new Vector2(0.0, 0.0);
+			/// <summary>A vector of unit length pointing left, i.e. with its X-coordinate set to -1.</summary>
+			public static readonly Vector2 Left = new Vector2(-1.0, 0.0);
+			/// <summary>A vector of unit length pointing right, i.e. with its X-coordinate set to 1.</summary>
+			public static readonly Vector2 Right = new Vector2(1.0, 0.0);
+			/// <summary>A vector of unit length pointing down, i.e. with its Y-coordinate set to -1.</summary>
+			public static readonly Vector2 Down = new Vector2(0.0, -1.0);
+			/// <summary>A vector of unit length pointing up, i.e. with its Y-coordinate set to 1.</summary>
+			public static readonly Vector2 Up = new Vector2(0.0, 1.0);
 		}
 		
 		// vector3
@@ -261,10 +320,10 @@ namespace OpenBveApi {
 				return new Vector3(a - b.X, a - b.Y, a - b.Z);
 			}
 			/// <summary>Negates a vector.</summary>
-			/// <param name="a">The vector.</param>
+			/// <param name="vector">The vector.</param>
 			/// <returns>The negation of the vector.</returns>
-			public static Vector3 operator -(Vector3 a) {
-				return new Vector3(-a.X, -a.Y, -a.Z);
+			public static Vector3 operator -(Vector3 vector) {
+				return new Vector3(-vector.X, -vector.Y, -vector.Z);
 			}
 			/// <summary>Multiplies two vectors.</summary>
 			/// <param name="a">The first vector.</param>
@@ -355,7 +414,7 @@ namespace OpenBveApi {
 			public override int GetHashCode() {
 				return base.GetHashCode();
 			}
-			// functions
+			// static functions
 			/// <summary>Gives the dot product of two vectors.</summary>
 			/// <param name="a">The first vector.</param>
 			/// <param name="b">The second vector.</param>
@@ -371,76 +430,189 @@ namespace OpenBveApi {
 				return new Vector3(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
 			}
 			/// <summary>Normalizes a vector.</summary>
-			/// <param name="a">The vector.</param>
+			/// <param name="vector">The vector to normalize.</param>
 			/// <returns>The normalized vector.</returns>
 			/// <exception cref="DivideByZeroException">Raised when the vector is a null vector.</exception>
-			public static Vector3 Normalize(Vector3 a) {
-				double norm = a.X * a.X + a.Y * a.Y + a.Z * a.Z;
+			public static Vector3 Normalize(Vector3 vector) {
+				double norm = vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z;
 				if (norm == 0.0) {
 					throw new DivideByZeroException();
 				} else {
 					double factor = 1.0 / System.Math.Sqrt(norm);
-					return new Vector3(a.X * factor, a.Y * factor, a.Z * factor);
+					return new Vector3(vector.X * factor, vector.Y * factor, vector.Z * factor);
 				}
 			}
 			/// <summary>Normalizes a vector.</summary>
-			/// <param name="a">The vector.</param>
+			/// <param name="vector">The vector to normalize.</param>
+			/// <param name="fallback">The fallback value to return in case the vector is a null vector.</param>
+			/// <returns>The normalized vector.</returns>
+			public static Vector3 Normalize(Vector3 vector, Vector3 fallback) {
+				double norm = vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z;
+				if (norm == 0.0) {
+					return fallback;
+				} else {
+					double factor = 1.0 / System.Math.Sqrt(norm);
+					return new Vector3(vector.X * factor, vector.Y * factor, vector.Z * factor);
+				}
+			}
+			/// <summary>Normalizes a vector.</summary>
+			/// <param name="vector">The vector to normalize.</param>
 			/// <exception cref="DivideByZeroException">Raised when the vector is a null vector.</exception>
-			public static void Normalize(ref Vector3 a) {
-				double norm = a.X * a.X + a.Y * a.Y + a.Z * a.Z;
+			public static void Normalize(ref Vector3 vector) {
+				double norm = vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z;
 				if (norm == 0.0) {
 					throw new DivideByZeroException();
 				} else {
 					double factor = 1.0 / System.Math.Sqrt(norm);
-					a.X *= factor;
-					a.Y *= factor;
-					a.Z *= factor;
+					vector.X *= factor;
+					vector.Y *= factor;
+					vector.Z *= factor;
+				}
+			}
+			/// <summary>Normalizes a vector.</summary>
+			/// <param name="vector">The vector to normalize.</param>
+			/// <param name="fallback">The fallback value to return in case the vector is a null vector.</param>
+			public static void Normalize(ref Vector3 vector, Vector3 fallback) {
+				double norm = vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z;
+				if (norm == 0.0) {
+					vector = fallback;
+				} else {
+					double factor = 1.0 / System.Math.Sqrt(norm);
+					vector.X *= factor;
+					vector.Y *= factor;
+					vector.Z *= factor;
 				}
 			}
 			/// <summary>Rotates a vector on the plane perpendicular to a specified direction.</summary>
-			/// <param name="a">The vector to rotate.</param>
+			/// <param name="vector">The vector to rotate.</param>
 			/// <param name="direction">The direction perpendicular to the plane on which to rotate.</param>
 			/// <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
 			/// <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
 			/// <returns>The rotated vector.</returns>
-			public static Vector3 Rotate(Vector3 a, Vector3 direction, double cosineOfAngle, double sineOfAngle) {
+			public static Vector3 Rotate(Vector3 vector, Vector3 direction, double cosineOfAngle, double sineOfAngle) {
 				double cosineComplement = 1.0 - cosineOfAngle;
-				double x = (cosineOfAngle + cosineComplement * direction.X * direction.X) * a.X + (cosineComplement * direction.X * direction.Y - sineOfAngle * direction.Z) * a.Y + (cosineComplement * direction.X * direction.Z + sineOfAngle * direction.Y) * a.Z;
-				double y = (cosineOfAngle + cosineComplement * direction.Y * direction.Y) * a.Y + (cosineComplement * direction.X * direction.Y + sineOfAngle * direction.Z) * a.X + (cosineComplement * direction.Y * direction.Z - sineOfAngle * direction.X) * a.Z;
-				double z = (cosineOfAngle + cosineComplement * direction.Z * direction.Z) * a.Z + (cosineComplement * direction.X * direction.Z - sineOfAngle * direction.Y) * a.X + (cosineComplement * direction.Y * direction.Z + sineOfAngle * direction.X) * a.Y;
+				double x = (cosineOfAngle + cosineComplement * direction.X * direction.X) * vector.X + (cosineComplement * direction.X * direction.Y - sineOfAngle * direction.Z) * vector.Y + (cosineComplement * direction.X * direction.Z + sineOfAngle * direction.Y) * vector.Z;
+				double y = (cosineOfAngle + cosineComplement * direction.Y * direction.Y) * vector.Y + (cosineComplement * direction.X * direction.Y + sineOfAngle * direction.Z) * vector.X + (cosineComplement * direction.Y * direction.Z - sineOfAngle * direction.X) * vector.Z;
+				double z = (cosineOfAngle + cosineComplement * direction.Z * direction.Z) * vector.Z + (cosineComplement * direction.X * direction.Z - sineOfAngle * direction.Y) * vector.X + (cosineComplement * direction.Y * direction.Z + sineOfAngle * direction.X) * vector.Y;
 				return new Vector3(x, y, z);
 			}
 			/// <summary>Rotates a vector on the plane perpendicular to a specified direction.</summary>
-			/// <param name="a">The vector to rotate.</param>
+			/// <param name="vector">The vector to rotate.</param>
 			/// <param name="direction">The direction perpendicular to the plane on which to rotate.</param>
 			/// <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
 			/// <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
-			public static void Rotate(ref Vector3 a, Vector3 direction, double cosineOfAngle, double sineOfAngle) {
+			public static void Rotate(ref Vector3 vector, Vector3 direction, double cosineOfAngle, double sineOfAngle) {
 				double cosineComplement = 1.0 - cosineOfAngle;
-				double x = (cosineOfAngle + cosineComplement * direction.X * direction.X) * a.X + (cosineComplement * direction.X * direction.Y - sineOfAngle * direction.Z) * a.Y + (cosineComplement * direction.X * direction.Z + sineOfAngle * direction.Y) * a.Z;
-				double y = (cosineOfAngle + cosineComplement * direction.Y * direction.Y) * a.Y + (cosineComplement * direction.X * direction.Y + sineOfAngle * direction.Z) * a.X + (cosineComplement * direction.Y * direction.Z - sineOfAngle * direction.X) * a.Z;
-				double z = (cosineOfAngle + cosineComplement * direction.Z * direction.Z) * a.Z + (cosineComplement * direction.X * direction.Z - sineOfAngle * direction.Y) * a.X + (cosineComplement * direction.Y * direction.Z + sineOfAngle * direction.X) * a.Y;
-				a.X = x;
-				a.Y = y;
-				a.Z = z;
+				double x = (cosineOfAngle + cosineComplement * direction.X * direction.X) * vector.X + (cosineComplement * direction.X * direction.Y - sineOfAngle * direction.Z) * vector.Y + (cosineComplement * direction.X * direction.Z + sineOfAngle * direction.Y) * vector.Z;
+				double y = (cosineOfAngle + cosineComplement * direction.Y * direction.Y) * vector.Y + (cosineComplement * direction.X * direction.Y + sineOfAngle * direction.Z) * vector.X + (cosineComplement * direction.Y * direction.Z - sineOfAngle * direction.X) * vector.Z;
+				double z = (cosineOfAngle + cosineComplement * direction.Z * direction.Z) * vector.Z + (cosineComplement * direction.X * direction.Z - sineOfAngle * direction.Y) * vector.X + (cosineComplement * direction.Y * direction.Z + sineOfAngle * direction.X) * vector.Y;
+				vector = new Vector3(x, y, z);
 			}
-			/// <summary>Creates a vertor perpendicular to the plane described by three specified vectors, suitable for being a surface normal.</summary>
-			/// <param name="a">The first vector to describe a plane.</param>
-			/// <param name="b">The second vector to describe a plane.</param>
-			/// <param name="c">The third vector to describe a plane.</param>
+			/// <summary>Shears a vector by conceptually slicing an object up along a direction and then displacing those slices along another direction.</summary>
+			/// <param name="vector">The vector to shear.</param>
+			/// <param name="sliceDirection">The direction along which slices perpendicular to this direction are displaced.</param>
+			/// <param name="displacementDirection">The direction into which slices are displaced.</param>
+			/// <returns>The sheared vector.</returns>
+			public static Vector3 Shear(Vector3 vector, Vector3 sliceDirection, Vector3 displacementDirection) {
+				return vector + Dot(vector, sliceDirection) * displacementDirection;
+			}
+			/// <summary>Shears a vector by conceptually slicing an object up along a direction and then displacing those slices along another direction.</summary>
+			/// <param name="vector">The vector to shear.</param>
+			/// <param name="sliceDirection">The direction along which slices perpendicular to this direction are displaced.</param>
+			/// <param name="displacementDirection">The direction into which slices are displaced.</param>
+			public static void Shear(ref Vector3 vector, Vector3 sliceDirection, Vector3 displacementDirection) {
+				vector += Dot(vector, sliceDirection) * displacementDirection;
+			}
+			/// <summary>Creates a vertor perpendicular to the plane described by three spatial coordinates, suitable for being a surface normal.</summary>
+			/// <param name="a">The first spatial coordinate to describe a plane.</param>
+			/// <param name="b">The second spatial coordinate to describe a plane.</param>
+			/// <param name="c">The third spatial coordinate to describe a plane.</param>
 			/// <returns>The vector perpendicular to the described plane.</returns>
-			/// <exception cref="DivideByZeroException">Raised when the specified vertices do not describe a plane.</exception>
+			/// <exception cref="DivideByZeroException">Raised when the specified spatial coordinates do not describe a plane.</exception>
 			public static Vector3 CreateNormal(Vector3 a, Vector3 b, Vector3 c) {
 				Vector3 ab = b - a;
 				Vector3 ac = c - a;
-				Vector3 n = Vector3.Cross(ab, ac);
-				return Vector3.Normalize(n);
+				Vector3 normal = Vector3.Cross(ab, ac);
+				return Vector3.Normalize(normal);
 			}
+			/// <summary>Checks whether three spatial coordinates are colinear, i.e. form a straight line.</summary>
+			/// <param name="a">The first spatial coordinate.</param>
+			/// <param name="b">The second spatial coordinate.</param>
+			/// <param name="c">The third spatial coordinate.</param>
+			public static bool AreColinear(Vector3 a, Vector3 b, Vector3 c) {
+				Vector3 ab = b - a;
+				Vector3 ac = c - a;
+				Vector3 normal = Vector3.Cross(ab, ac);
+				return IsNullVector(normal);
+			}
+			/// <summary>Checks whether a vector is a null vector.</summary>
+			/// <returns>A boolean indicating whether the vector is a null vector.</returns>
+			public static bool IsNullVector(Vector3 vector) {
+				return vector.X == 0.0 & vector.Y == 0.0 & vector.Z == 0.0;
+			}
+			// instance functions
 			/// <summary>Checks whether this instance of a vector is a null vector.</summary>
 			/// <returns>A boolean indicating whether this instance of a vector is a null vector.</returns>
 			public bool IsNullVector() {
 				return this.X == 0.0 & this.Y == 0.0 & this.Z == 0.0;
 			}
+			// fields
+			/// <summary>The null vector, i.e. a vector with all coordinates set to zero.</summary>
+			public static readonly Vector3 Null = new Vector3(0.0, 0.0, 0.0);
+			/// <summary>A vector of unit length pointing left, i.e. with its X-coordinate set to -1.</summary>
+			public static readonly Vector3 Left = new Vector3(-1.0, 0.0, 0.0);
+			/// <summary>A vector of unit length pointing right, i.e. with its X-coordinate set to 1.</summary>
+			public static readonly Vector3 Right = new Vector3(1.0, 0.0, 0.0);
+			/// <summary>A vector of unit length pointing down, i.e. with its Y-coordinate set to -1.</summary>
+			public static readonly Vector3 Down = new Vector3(0.0, -1.0, 0.0);
+			/// <summary>A vector of unit length pointing up, i.e. with its Y-coordinate set to 1.</summary>
+			public static readonly Vector3 Up = new Vector3(0.0, 1.0, 0.0);
+			/// <summary>A vector of unit length pointing backward, i.e. with its Z-coordinate set to -1.</summary>
+			public static readonly Vector3 Backward = new Vector3(0.0, 0.0, -1.0);
+			/// <summary>A vector of unit length pointing forward, i.e. with its Z-coordinate set to 1.</summary>
+			public static readonly Vector3 Forward = new Vector3(0.0, 0.0, 1.0);
+		}
+		
+		// orientation2
+		/// <summary>Represents a two-dimensional orientation, consisting of two perpendicular, normalized vectors.</summary>
+		public struct Orientation2 {
+			// members
+			/// <summary>The vector pointing right.</summary>
+			public Vector2 X;
+			/// <summary>The vector pointing up.</summary>
+			public Vector2 Y;
+			// constructors
+			/// <summary>Creates a new instance of this structure.</summary>
+			/// <param name="x">The vector pointing right.</param>
+			/// <param name="y">The vector pointing up.</param>
+			public Orientation2(Vector2 x, Vector2 y) {
+				this.X = x;
+				this.Y = y;
+			}
+			// arithmetic operators
+			/// <summary>Negates an orientation.</summary>
+			/// <param name="orientation">The orientation.</param>
+			/// <returns>The negation of the orientation.</returns>
+			public static Orientation2 operator -(Orientation2 orientation) {
+				return new Orientation2(-orientation.X, -orientation.Y);
+			}
+			// functions
+			/// <summary>Rotates an orientation on the plane perpendicular to a specified direction.</summary>
+			/// <param name="orientation">The orientation to rotate.</param>
+			/// <param name="cosineOfAngle">The cosine of the angle by which to rotate.</param>
+			/// <param name="sineOfAngle">The sine of the angle by which to rotate.</param>
+			/// <returns>The rotated vector.</returns>
+			public static Orientation2 Rotate(Orientation2 orientation, double cosineOfAngle, double sineOfAngle) {
+				Vector2 x = Vector2.Rotate(orientation.X, cosineOfAngle, sineOfAngle);
+				Vector2 y = Vector2.Rotate(orientation.Y, cosineOfAngle, sineOfAngle);
+				return new Orientation2(x, y);
+			}
+			// static fields
+			/// <summary>The default orientation with X = {1, 0} and Y = {0, 1}.</summary>
+			public static readonly Orientation2 Default = new Orientation2(
+				new Vector2(1.0, 0.0),
+				new Vector2(0.0, 1.0)
+			);
 		}
 		
 		// orientation3
@@ -470,8 +642,6 @@ namespace OpenBveApi {
 			public static Orientation3 operator -(Orientation3 a) {
 				return new Orientation3(-a.X, -a.Y, -a.Z);
 			}
-			// comparisons
-			
 			// functions
 			/// <summary>Rotates an orientation on the plane perpendicular to a specified direction.</summary>
 			/// <param name="a">The orientation to rotate.</param>
@@ -487,7 +657,11 @@ namespace OpenBveApi {
 			}
 			// static fields
 			/// <summary>The default orientation with X = {1, 0, 0}, Y = {0, 1, 0} and Z = {0, 0, 1}.</summary>
-			public static readonly Orientation3 Default = new Orientation3(new Vector3(1.0, 0.0, 0.0), new Vector3(0.0, 1.0, 0.0), new Vector3(0.0, 0.0, 1.0));
+			public static readonly Orientation3 Default = new Orientation3(
+				new Vector3(1.0, 0.0, 0.0),
+				new Vector3(0.0, 1.0, 0.0),
+				new Vector3(0.0, 0.0, 1.0)
+			);
 		}
 		
 	}

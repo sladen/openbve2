@@ -13,5 +13,3 @@ copy Standard.Sound.Wav\bin\Release\Standard.Sound.Wav.dll OpenBve\bin\Release\P
 copy Standard.Sound.Wav\bin\Release\Standard.Sound.Wav.pdb OpenBve\bin\Release\Plugins
 copy Standard.Texture.BmpGifExigJpgPngTiff\bin\Release\Standard.Texture.BmpGifExigJpgPngTiff.dll OpenBve\bin\Release\Plugins
 copy Standard.Texture.BmpGifExigJpgPngTiff\bin\Release\Standard.Texture.BmpGifExigJpgPngTiff.pdb OpenBve\bin\Release\Plugins
-
-pause

@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.Text;
 
 namespace OpenBve {
@@ -12,15 +11,13 @@ namespace OpenBve {
 			// --- general ---
 			/// <summary>Reports a problem to the host application.</summary>
 			/// <param name="type">The type of problem to be reported.</param>
-			/// <param name="data">A list of key-value pairs containing information about the problem.</param>
-			/// <remarks>Commonly used keys include "Source", "File", "Row", "Column", "Position" or "Text".</remarks>
-			public void Report(OpenBveApi.General.ReportType type, params OpenBveApi.General.KeyValuePair[] data) {
+			/// <param name="keyValuePairs">A list of key-value pairs containing information about the problem.</param>
+			public void Report(OpenBveApi.General.ReportType type, params OpenBveApi.General.ReportKeyValuePair[] keyValuePairs) {
 				Console.ForegroundColor = ConsoleColor.White;
-				Console.Write("Report:");
-				for (int i = 0; i < data.Length; i++) {
-					Console.Write(" " + data[i].Key + "=" + data[i].Value.ToString());
+				Console.WriteLine("Report:");
+				for (int i = 0; i < keyValuePairs.Length; i++) {
+					Console.WriteLine("\t" + keyValuePairs[i].Key.ToString() + " = " + keyValuePairs[i].Value.ToString());
 				}
-				Console.WriteLine();
 				Console.ForegroundColor = ConsoleColor.Gray;
 			}
 			
@@ -70,7 +67,7 @@ namespace OpenBve {
 			/// <param name="origin">The origin of the texture which includes a valid path.</param>
 			/// <param name="texture">Receives the texture.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result LoadTexture(OpenBveApi.General.Origin origin, out Bitmap texture) {
+			public OpenBveApi.General.Result LoadTexture(OpenBveApi.General.Origin origin, out OpenBveApi.Texture.TextureData texture) {
 				if (origin.Path == null) {
 					texture = null;
 					return OpenBveApi.General.Result.InvalidArgument;
@@ -145,8 +142,10 @@ namespace OpenBve {
 			/// <param name="handle">Receives a handle to the texture.</param>
 			/// <returns>The success of the operation.</returns>
 			public OpenBveApi.General.Result RegisterTexture(OpenBveApi.General.Origin origin, OpenBveApi.Texture.TextureParameters parameters, out OpenBveApi.Texture.TextureHandle handle) {
-				handle = OpenBveApi.Texture.TextureHandle.Null;
-				return OpenBveApi.General.Result.NotSupported;
+				int index;
+				Textures.RegisterTexture(origin, parameters, out index);
+				handle = new OpenBveApi.Texture.TextureHandle((object)index);
+				return OpenBveApi.General.Result.Successful;
 			}
 			
 			/// <summary>Registers a texture with the host application.</summary>
@@ -154,7 +153,8 @@ namespace OpenBve {
 			/// <param name="parameters">The parameters for the texture.</param>
 			/// <param name="handle">Receives a handle to the texture.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result RegisterTexture(Bitmap texture, OpenBveApi.Texture.TextureParameters parameters, out OpenBveApi.Texture.TextureHandle handle) {
+			public OpenBveApi.General.Result RegisterTexture(OpenBveApi.Texture.TextureData texture, OpenBveApi.Texture.TextureParameters parameters, out OpenBveApi.Texture.TextureHandle handle) {
+				// TODO: Implement this.
 				handle = OpenBveApi.Texture.TextureHandle.Null;
 				return OpenBveApi.General.Result.NotSupported;
 			}
@@ -243,6 +243,7 @@ namespace OpenBve {
 			/// <param name="sound">Receives the sound data.</param>
 			/// <returns>The success of the operation.</returns>
 			public OpenBveApi.General.Result LoadSound(OpenBveApi.General.Origin origin, out OpenBveApi.Sound.SoundData sound) {
+				// TODO: Implement this.
 				sound = null;
 				return OpenBveApi.General.Result.NotSupported;
 			}
@@ -252,6 +253,7 @@ namespace OpenBve {
 			/// <param name="handle">Receives a handle to the sound.</param>
 			/// <returns>The success of the operation.</returns>
 			public OpenBveApi.General.Result RegisterSound(OpenBveApi.General.Origin origin, out OpenBveApi.Sound.SoundHandle handle) {
+				// TODO: Implement this.
 				handle = OpenBveApi.Sound.SoundHandle.Null;
 				return OpenBveApi.General.Result.NotSupported;
 			}
@@ -261,6 +263,7 @@ namespace OpenBve {
 			/// <param name="handle">Receives a handle to the sound.</param>
 			/// <returns>The success of the operation.</returns>
 			public OpenBveApi.General.Result RegisterSound(OpenBveApi.Sound.SoundData sound, out OpenBveApi.Sound.SoundHandle handle) {
+				// TODO: Implement this.
 				handle = OpenBveApi.Sound.SoundHandle.Null;
 				return OpenBveApi.General.Result.NotSupported;
 			}
