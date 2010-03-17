@@ -1,0 +1,3 @@
+﻿After compiling the source code, you will need to copy the assemblies of the individual plugins to the Plugins folder in the OpenBve working directory. Windows users can execute the CopyPlugins.bat shell script to do this.
+
+Additionally, the Route.CsvRw.dll plugins needs its Route.CsvRw data folder inside the Plugins folder. Copy this one over from the Binaries directory that ships with this distribution.

@@ -8,21 +8,26 @@ namespace OpenBveApi {
 		/// <summary>Represents a texture format.</summary>
 		public struct TextureFormat {
 			// members
-			/// <summary>The width.</summary>
+			/// <summary>The positive width of the texture.</summary>
 			public int Width;
-			/// <summary>The height.</summary>
+			/// <summary>The positive height of the texture.</summary>
 			public int Height;
 			/// <summary>The number of bits per channel. Allowed values are 8 or 16.</summary>
 			public int BitsPerChannel;
 			// constructors
 			/// <summary>Creates a new instance of this structure.</summary>
-			/// <param name="width">The width.</param>
-			/// <param name="height">The height.</param>
+			/// <param name="width">The positive width of the texture.</param>
+			/// <param name="height">The positive height of the texture.</param>
 			/// <param name="bitsPerChannel">The number of bits per channel. Allowed values are 8 or 16.</param>
+			/// <exception cref="System.ArgumentException">Raised when any of the submitted arguments are invalid.</exception>
 			public TextureFormat(int width, int height, int bitsPerChannel) {
-				this.Width = width;
-				this.Height = height;
-				this.BitsPerChannel = bitsPerChannel;
+				if (width <= 0 | height <= 0 | bitsPerChannel != 8 & bitsPerChannel != 16) {
+					throw new ArgumentException();
+				} else {
+					this.Width = width;
+					this.Height = height;
+					this.BitsPerChannel = bitsPerChannel;
+				}
 			}
 		}
 		
@@ -57,6 +62,7 @@ namespace OpenBveApi {
 		// texture clip region
 		/// <summary>Represents a region of a texture to be extracted by a texture load operation.</summary>
 		public class TextureClipRegion {
+			// members
 			/// <summary>The x-coordinate of the left margin of the region to be extracted, in pixels.</summary>
 			/// <remarks>The coordinate is zero-based.</remarks>
 			public int Left;
@@ -67,8 +73,21 @@ namespace OpenBveApi {
 			public int Width;
 			/// <summary>The height of the region to be extracted in pixels.</summary>
 			public int Height;
+			// static functions
+			/// <summary>Checks two texture clip regions for equality.</summary>
+			/// <param name="a">The first texture clip region.</param>
+			/// <param name="b">The second texture clip region.</param>
+			/// <returns>A boolean indicating whether the two texture clip regions are equal.</returns>
+			public static bool Equals(TextureClipRegion a, TextureClipRegion b) {
+				if (a == null & b == null) {
+					return true;
+				} else if (a == null | b == null) {
+					return false;
+				} else {
+					return a.Left == b.Left & a.Top == b.Top & a.Width == b.Width & a.Height == b.Height;
+				}
+			}
 		}
-
 		
 		// texture parameters
 		/// <summary>Represents options for the texture loading process.</summary>
@@ -88,7 +107,6 @@ namespace OpenBveApi {
 			/// <param name="horizontalWrapMode">The horizontal wrap mode for this texture.</param>
 			/// <param name="verticalWrapMode">The vertical wrap mode for this texture.</param>
 			/// <param name="clipRegion">The region of the texture to be extracted, or a null reference for the entire texture.</param>
-			/// <remarks>If more than one transparent color is specified, you must ensure that they are in canonical order. Use the static method GetCanonicalOrder of the TextureLoadOptions structure to ensure this order.</remarks>
 			public TextureParameters(Color.TransparentColor transparentColor, TextureWrapMode horizontalWrapMode, TextureWrapMode verticalWrapMode, TextureClipRegion clipRegion) {
 				this.TransparentColor = transparentColor;
 				this.HorizontalWrapMode = horizontalWrapMode;
@@ -133,24 +151,16 @@ namespace OpenBveApi {
 			public override int GetHashCode() {
 				return base.GetHashCode();
 			}
+			// read-only fields
+			/// <summary>Represents texture parameters without transparent color nor clip regions, and with the texture wrap mode set to ClampToEdge.</summary>
+			public static readonly TextureParameters ClampToEdge = new TextureParameters(Color.TransparentColor.Empty, TextureWrapMode.ClampToEdge, TextureWrapMode.ClampToEdge, null);
+			/// <summary>Represents texture parameters without transparent color nor clip regions, and with the texture wrap mode set to Repeat.</summary>
+			public static readonly TextureParameters Repeat = new TextureParameters(Color.TransparentColor.Empty, TextureWrapMode.Repeat, TextureWrapMode.Repeat, null);
 		}
 		
 		// texture handle
 		/// <summary>Represents a handle to a texture as obtained from the host application.</summary>
-		public struct TextureHandle {
-			// members
-			/// <summary>Data by which the host application can identify the texture this handle points to, or a null reference.</summary>
-			public object TextureData;
-			// constructors
-			/// <summary>Creates a new instance of this structure.</summary>
-			/// <param name="textureData">Data by which the host application can identify the texture this handle points to, or a null reference.</param>
-			public TextureHandle(object textureData) {
-				this.TextureData = textureData;
-			}
-			// read-only fields
-			/// <summary>Represents a handle that has not been allocated by the host application.</summary>
-			public static readonly TextureHandle Null = new TextureHandle(null);
-		}
+		public abstract class TextureHandle { }
 		
 	}
 }

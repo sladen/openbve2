@@ -3,7 +3,7 @@ using System;
 namespace OpenBveApi {
 	/// <summary>Provides structures to store color data.</summary>
 	public static class Color {
-		
+
 		// color rgb
 		/// <summary>Represents a floating-point RGB color.</summary>
 		/// <remarks>In each color channel, a value of zero represents no contribution to that channel, while a value of one represents full contribution.</remarks>
@@ -180,7 +180,6 @@ namespace OpenBveApi {
 			public override int GetHashCode() {
 				return base.GetHashCode();
 			}
-
 		}
 		
 		// color rgba
@@ -207,6 +206,55 @@ namespace OpenBveApi {
 				this.G = g;
 				this.B = b;
 				this.A = a;
+			}
+			/// <summary>Creates a new instance of this structure.</summary>
+			/// <param name="color">The base color.</param>
+			/// <param name="alpha">The alpha component.</param>
+			public ColorRGBA(ColorRGB color, float alpha) {
+				this.R = color.R;
+				this.G = color.G;
+				this.B = color.B;
+				this.A = alpha;
+			}
+			/// <summary>Creates a new instance of this structure.</summary>
+			/// <param name="color">The base color.</param>
+			/// <param name="alpha">The alpha component.</param>
+			public ColorRGBA(ColorRGBA color, float alpha) {
+				this.R = color.R;
+				this.G = color.G;
+				this.B = color.B;
+				this.A = alpha;
+			}
+			// comparisons
+			/// <summary>Checks two colors for equality.</summary>
+			/// <param name="a">The first color.</param>
+			/// <param name="b">The second color.</param>
+			/// <returns>A boolean indicating whether the two colors are equal.</returns>
+			public static bool operator ==(ColorRGBA a, ColorRGBA b) {
+				return a.R == b.R & a.G == b.G & a.B == b.B & a.A == b.A;
+			}
+			/// <summary>Checks two colors for inequality.</summary>
+			/// <param name="a">The first color.</param>
+			/// <param name="b">The second color.</param>
+			/// <returns>A boolean indicating whether the two colors are unequal.</returns>
+			public static bool operator !=(ColorRGBA a, ColorRGBA b) {
+				return a.R != b.R | a.G != b.G | a.B != b.B | a.A != b.A;
+			}
+			/// <summary>Checks this instance and a specified object for equality.</summary>
+			/// <param name="obj">The object to compare.</param>
+			/// <returns>A boolean indicating whether this instance is equal to the specified object.</returns>
+			public override bool Equals(object obj) {
+				if (obj is ColorRGBA) {
+					ColorRGBA color = (ColorRGBA)obj;
+					return this.R == color.R & this.G == color.G & this.B == color.B & this.A == color.A;
+				} else {
+					return base.Equals(obj);
+				}
+			}
+			/// <summary>Gets the hash code for this instance.</summary>
+			/// <returns>The hash code.</returns>
+			public override int GetHashCode() {
+				return base.GetHashCode();
 			}
 			// read-only fields
 			/// <summary>A black color.</summary>
@@ -292,8 +340,8 @@ namespace OpenBveApi {
 				return base.GetHashCode();
 			}
 			// static fields
-			/// <summary>Represents that no transparent color is to be used.</summary>
-			public static readonly TransparentColor None = new TransparentColor(0, 0, 0, false);
+			/// <summary>Represents that no transparent color is used.</summary>
+			public static readonly TransparentColor Empty = new TransparentColor(0, 0, 0, false);
 		}
 		
 	}

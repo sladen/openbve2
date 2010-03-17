@@ -21,7 +21,7 @@ namespace OpenBve {
 		 * Registered textures are identified by their file or folder names, the plugin that is supposed
 		 * to load the texture, and via additional properties. If a texture with the same properties
 		 * is registered multiple times, it will in fact only reuse the already registered texture. This
-		 * means that this texture manager only stores and managed each unique texture once.
+		 * means that this texture manager only stores and manages each unique texture once.
 		 * 
 		 * Generally, plugins will indirectly call RegisterTexture to register a texture and acquire a
 		 * handle to refer to this texture for later use. The renderer, or more precisely, the object
@@ -33,14 +33,28 @@ namespace OpenBve {
 		 * in Textures_Helper.cs for easier maintenance.
 		 * 
 		 * TODO: Not all functions in this file have been completely implemented yet.
+		 * TODO: The XML documentation in this file is still incomplete.
 		 * 
 		 * */
+		
+		// api handle
+		/// <summary>Represents a handle to a texture.</summary>
+		/// <remarks>This class is used for interaction with the API.</remarks>
+		internal class ApiHandle : OpenBveApi.Texture.TextureHandle {
+			/// <summary>The index to the texture.</summary>
+			internal int TextureIndex;
+			/// <summary>Creates a new instance of this class.</summary>
+			/// <param name="libraryIndex">The index to the texture.</param>
+			internal ApiHandle(int textureIndex) {
+				this.TextureIndex = textureIndex;
+			}
+		}
 		
 		// texture type
 		internal enum TextureType {
 			Unknown = 0,
 			Opaque = 1,
-			TransparentColor = 2,
+			Transparent = 2,
 			Alpha = 3
 		}
 		
@@ -85,14 +99,12 @@ namespace OpenBve {
 		/// <summary>Registers a texture and returns the associated texture index.</summary>
 		/// <param name="origin">The origin of the texture. If a path is provided, it must be an absolute path.</param>
 		/// <param name="parameters">The parameters for the texture.</param>
-		/// <param name="textureIndex">Receives the managed texture index on success.</param>
+		/// <param name="textureIndex">Receives the managed texture index.</param>
 		internal static void RegisterTexture(OpenBveApi.General.Origin origin, OpenBveApi.Texture.TextureParameters parameters, out int textureIndex) {
 			int index;
 			if (FindTexture(origin, parameters, out index)) {
-				// texture already exists
 				textureIndex = index;
 			} else {
-				// register new texture
 				if (RegisteredTextures.Length == RegisteredTextureCount) {
 					Array.Resize<Texture>(ref RegisteredTextures, RegisteredTextures.Length << 1);
 				}
@@ -110,8 +122,36 @@ namespace OpenBve {
 			}
 		}
 		
+		// register and load texture
+		/// <summary>Registers and loads a texture directly from raw data.</summary>
+		/// <param name="raw">The width of the texture.</param>
+		/// <param name="raw">The height of the texture.</param>
+		/// <param name="raw">The raw texture data.</param>
+		/// <param name="textureIndex">Receives the managed texture index.</param>
+		/// <param name="openGlTextureIndex">Receives the OpenGL texture index.</param>
+		internal static void RegisterAndLoadTexture(int width, int height, byte[] raw, out int textureIndex, out int openGlTextureIndex) {
+			if (RegisteredTextures.Length == RegisteredTextureCount) {
+				Array.Resize<Texture>(ref RegisteredTextures, RegisteredTextures.Length << 1);
+			}
+			textureIndex = RegisteredTextureCount;
+			RegisteredTextures[RegisteredTextureCount] = new Texture();
+			RegisteredTextures[RegisteredTextureCount].Origin = OpenBveApi.General.Origin.Empty;
+			RegisteredTextures[RegisteredTextureCount].Parameters = OpenBveApi.Texture.TextureParameters.ClampToEdge;
+			RegisteredTextures[RegisteredTextureCount].RawData = raw;
+			RegisteredTextures[RegisteredTextureCount].RawWidth = width;
+			RegisteredTextures[RegisteredTextureCount].RawHeight = height;
+			RegisteredTextures[RegisteredTextureCount].Type = TextureType.Alpha;
+			RegisteredTextures[RegisteredTextureCount].Status = TextureStatus.Finalizing;
+			RegisteredTextures[RegisteredTextureCount].OpenGlTextureIndex = 0;
+			SubmitRawDataToOpenGl(RegisteredTextureCount, false);
+			RegisteredTextures[RegisteredTextureCount].Status = TextureStatus.Loaded;
+			textureIndex = RegisteredTextureCount;
+			openGlTextureIndex = RegisteredTextures[RegisteredTextureCount].OpenGlTextureIndex;
+			RegisteredTextureCount++;
+		}
+		
 		// find texture
-		/// <summary>Finds a texture of a given file name and load options, receives the texture index in an output parameter, and returns the success of the operation.</summary>
+		/// <summary>Finds a texture of a specified file name and load options, receives the texture index in an output parameter, and returns the success of the operation.</summary>
 		/// <param name="origin">The texture origin to search for.</param>
 		/// <param name="parameters">The texture parameters to search for.</param>
 		/// <param name="textureIndex">Receives the texture index if the texture was found.</param>
@@ -120,7 +160,7 @@ namespace OpenBve {
 			if (origin.Path != null) {
 				for (int i = 0; i < RegisteredTextureCount; i++) {
 					if (RegisteredTextures[i] != null && RegisteredTextures[i].Origin.Path != null) {
-						if (OpenBveApi.General.Origin.Equals(Interfaces.Host10, RegisteredTextures[i].Origin, origin)) {
+						if (OpenBveApi.General.Origin.Equals(RegisteredTextures[i].Origin, origin)) {
 							if (RegisteredTextures[i].Parameters == parameters) {
 								textureIndex = i;
 								return true;
@@ -133,70 +173,111 @@ namespace OpenBve {
 			return false;
 		}
 
-		// use texture
-		internal static int UseTexture(int TextureIndex) {
-			switch(RegisteredTextures[TextureIndex].Status) {
-				case TextureStatus.NotLoaded:
-					// not loaded
-					LoadTextureRawData(TextureIndex);
-					SubmitRawDataToOpenGl(TextureIndex);
-					return RegisteredTextures[TextureIndex].OpenGlTextureIndex;
-				case TextureStatus.Scheduled:
-					// scheduled - wait for the background worker to complete loading
-					while (RegisteredTextures[TextureIndex].Status == TextureStatus.Scheduled) {
-						System.Threading.Thread.Sleep(0);
+		// load texture
+		/// <summary>Loads a registered texture immediately or via the background worker.</summary>
+		/// <param name="textureIndex">The index of the registered texture.</param>
+		/// <param name="loadImmediately">Whether to load the texture immediately or via the background worker.</param>
+		internal static void LoadTexture(int textureIndex, bool loadImmediately) {
+			if (loadImmediately) {
+				switch(RegisteredTextures[textureIndex].Status) {
+					case TextureStatus.NotLoaded:
+						// not loaded
+						LoadTextureRawData(textureIndex);
+						SubmitRawDataToOpenGl(textureIndex, true);
+						RegisteredTextures[textureIndex].Status = TextureStatus.Loaded;
+						break;
+					case TextureStatus.Scheduled:
+						// scheduled - wait for the background worker to complete loading
+						while (RegisteredTextures[textureIndex].Status != TextureStatus.Finalizing) {
+							System.Threading.Thread.Sleep(0);
+						}
+						SubmitRawDataToOpenGl(textureIndex, true);
+						break;
+					case TextureStatus.Finalizing:
+						// finalizing
+						SubmitRawDataToOpenGl(textureIndex, true);
+						RegisteredTextures[textureIndex].Status = TextureStatus.Loaded;
+						break;
+				}
+			} else {
+				throw new NotImplementedException("This operation cannot be performed because the background worker is not yet implemented.");
+				/*
+					if (RegisteredTextures[textureIndex].Status == TextureStatus.NotLoaded) {
+						// let the background worker load the texture
+						RegisteredTextures[textureIndex].Status = TextureStatus.Scheduled;
 					}
-					SubmitRawDataToOpenGl(TextureIndex);
-					return RegisteredTextures[TextureIndex].OpenGlTextureIndex;
-				case TextureStatus.Finalizing:
-					// finalizing
-					SubmitRawDataToOpenGl(TextureIndex);
-					return RegisteredTextures[TextureIndex].OpenGlTextureIndex;
-				case TextureStatus.Loaded:
-					// loaded
-					return RegisteredTextures[TextureIndex].OpenGlTextureIndex;
-					break;
-				default:
-					// invalid texture status
-					throw new InvalidOperationException();
+				 */
+			}
+		}
+		
+		// get opengl texture index
+		/// <summary>Gets the OpenGL texture index for a registered texture provided that the texture has been loaded into OpenGL.</summary>
+		/// <param name="textureIndex">The index of the registered texture.</param>
+		/// <param name="openGlTextureIndex">Receives the OpenGL texture index.</param>
+		/// <returns>A boolean indicating the success of the operation.</returns>
+		internal static bool GetOpenGlTextureIndex(int textureIndex, out int openGlTextureIndex) {
+			if (RegisteredTextures[textureIndex].Status == TextureStatus.Loaded) {
+				openGlTextureIndex = RegisteredTextures[textureIndex].OpenGlTextureIndex;
+				return true;
+			} else {
+				openGlTextureIndex = 0;
+				return false;
 			}
 		}
 		
 		// load texture raw data
-		/// <summary>Loads the raw data of a registered texture. The texture status must be NeverLoaded, Queried or Unloaded.</summary>
+		/// <summary>Loads the raw data of a registered texture. The texture status must be NotLoaded or Scheduled.</summary>
 		/// <param name="TextureIndex">The index to the registered texture.</param>
-		/// <exception cref="InvalidOperationException">Raised when the status of the registered texture is not NeverLoaded, Queried or Unloaded.</exception>
+		/// <exception cref="InvalidOperationException">Raised when the status of the registered texture is neither NotLoaded nor Scheduled.</exception>
 		/// <remarks>When this operation completes, the status of the registered texture is set to Finalizing.</remarks>
-		internal static void LoadTextureRawData(int TextureIndex) {
+		internal static void LoadTextureRawData(int textureIndex) {
 			if (
-				RegisteredTextures[TextureIndex].Status == TextureStatus.NotLoaded |
-				RegisteredTextures[TextureIndex].Status == TextureStatus.Scheduled
+				RegisteredTextures[textureIndex].Status == TextureStatus.NotLoaded |
+				RegisteredTextures[textureIndex].Status == TextureStatus.Scheduled
 			) {
 				// load texture
-				OpenBveApi.General.Origin origin = RegisteredTextures[TextureIndex].Origin;
-				OpenBveApi.Texture.TextureParameters parameters = RegisteredTextures[TextureIndex].Parameters;
+				OpenBveApi.General.Origin origin = RegisteredTextures[textureIndex].Origin;
+				OpenBveApi.Texture.TextureParameters parameters = RegisteredTextures[textureIndex].Parameters;
 				OpenBveApi.Texture.TextureData texture;
-				Interfaces.Host10.LoadTexture(origin, out texture);
-				// convert to 8 bits per channel
-				byte[] raw;
-				ConvertTo8BitsPerChannel(texture, out raw);
-				int width = texture.Format.Width;
-				int height = texture.Format.Height;
-				// extract clip
-				if (parameters.ClipRegion != null) {
-					ExtractClipRegion(ref width, ref height, ref raw, parameters.ClipRegion);
-				}
-				// remove transparent color
-				if (parameters.TransparentColor.Assigned) {
+				if (Interfaces.Host10.LoadTexture(origin, out texture) == OpenBveApi.General.Result.Successful) {
+					// convert to 8 bits per channel
+					byte[] raw;
+					ConvertTo8BitsPerChannel(texture, out raw);
+					int width = texture.Format.Width;
+					int height = texture.Format.Height;
+					// extract clip
+					if (parameters.ClipRegion != null) {
+						ExtractClipRegion(ref width, ref height, ref raw, parameters.ClipRegion);
+					}
+					// eliminate transparent color
 					EliminateTransparentColor(width, height, ref raw, parameters.TransparentColor);
+					// convert to power-of-two
+					ConvertToPowerOfTwoSize(ref width, ref height, ref raw);
+					// determine texture type
+					RegisteredTextures[textureIndex].Type = DetermineTextureType(width, height, raw);
+					// store data
+					RegisteredTextures[textureIndex].RawWidth = width;
+					RegisteredTextures[textureIndex].RawHeight = height;
+					RegisteredTextures[textureIndex].RawData = raw;
+					RegisteredTextures[textureIndex].Status = TextureStatus.Finalizing;
+				} else {
+					// loading failed
+					RegisteredTextures[textureIndex].Type = TextureType.Opaque;
+					RegisteredTextures[textureIndex].RawWidth = 32;
+					RegisteredTextures[textureIndex].RawHeight = 8;
+					RegisteredTextures[textureIndex].RawData = new byte[] {
+						/* white "error" on red background */
+						0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF,
+						0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF,
+						0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF,
+						0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF,
+						0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF,
+						0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF,
+						0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF,
+						0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF
+					};
+					RegisteredTextures[textureIndex].Status = TextureStatus.Finalizing;
 				}
-				// convert to power-of-two
-				ConvertToPowerOfTwoSize(ref width, ref height, ref raw);
-				// store data
-				RegisteredTextures[TextureIndex].RawWidth = width;
-				RegisteredTextures[TextureIndex].RawHeight = height;
-				RegisteredTextures[TextureIndex].RawData = raw;
-				RegisteredTextures[TextureIndex].Status = TextureStatus.Finalizing;
 			} else {
 				// invalid texture status
 				throw new InvalidOperationException();
@@ -205,64 +286,72 @@ namespace OpenBve {
 		
 		// submit raw data to opengl
 		/// <summary>Submits the raw data of a registered texture to OpenGL. The texture status must be Finalizing.</summary>
-		/// <param name="TextureIndex">The index to the registered texture.</param>
-		/// <exception cref="InvalidOperationException">Raised when the status of the registered texture is not Finalizing.</exception>
-		/// <remarks>When this operation completes, the status of the registered texture is set to Loaded.</remarks>
-		internal static void SubmitRawDataToOpenGl(int TextureIndex) {
+		/// <param name="textureIndex">The index to the registered texture.</param>
+		/// <param name="respectQuality">Whether to respect the global texture quality setting. If set to False, bilinear filtering is used without mipmapping.</param>
+		internal static void SubmitRawDataToOpenGl(int textureIndex, bool respectQuality) {
 			int[] names = new int[1];
 			Gl.glGenTextures(1, names);
-			RegisteredTextures[TextureIndex].OpenGlTextureIndex = names[0];
-			Gl.glBindTexture(Gl.GL_TEXTURE_2D, RegisteredTextures[TextureIndex].OpenGlTextureIndex);
-			
-			// filter
-			// TODO: Implement this.
-
-//			switch (Options.CurrentOptions.TextureInterpolationMode) {
-//				case Options.TextureInterpolationMode.NearestNeighbor:
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_NEAREST);
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_NEAREST);
-//					break;
-//				case Options.TextureInterpolationMode.NearestNeighborMipmapping:
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_NEAREST_MIPMAP_NEAREST);
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_NEAREST);
-//					break;
-//				case Options.TextureInterpolationMode.Bilinear:
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR);
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
-//					break;
-//				case Options.TextureInterpolationMode.BilinearMipmapping:
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_NEAREST_MIPMAP_LINEAR);
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
-//					break;
-//				case Options.TextureInterpolationMode.Trilinear:
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR_MIPMAP_LINEAR);
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
-//					break;
-//				default:
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR_MIPMAP_LINEAR);
-//					Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
-//					break;
-//			}
-			Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR);
-			Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
-			
-			// wrap mode
-			if (RegisteredTextures[TextureIndex].Parameters.HorizontalWrapMode == OpenBveApi.Texture.TextureWrapMode.ClampToEdge) {
+			RegisteredTextures[textureIndex].OpenGlTextureIndex = names[0];
+			Gl.glBindTexture(Gl.GL_TEXTURE_2D, names[0]);
+			if (respectQuality) {
+				switch (Program.CurrentOptions.InterpolationMode) {
+					case Options.TextureInterpolationMode.NearestNeighbor:
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_NEAREST);
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_NEAREST);
+						break;
+					case Options.TextureInterpolationMode.NearestNeighborMipmapped:
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_NEAREST_MIPMAP_NEAREST);
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_NEAREST);
+						break;
+					case Options.TextureInterpolationMode.Bilinear:
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR);
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
+						break;
+					case Options.TextureInterpolationMode.BilinearMipmapped:
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_NEAREST_MIPMAP_LINEAR);
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
+						break;
+					case Options.TextureInterpolationMode.TrilinearMipmapped:
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR_MIPMAP_LINEAR);
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
+						break;
+					default:
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR_MIPMAP_LINEAR);
+						Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR);
+						break;
+				}
+			} else {
+				Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_NEAREST);
+				Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_NEAREST);
+			}
+			if (Program.CurrentOptions.InterpolationMode == Options.TextureInterpolationMode.AnisotropicFiltering & Program.AnisotropicMaximum != 0.0f) {
+				Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAX_ANISOTROPY_EXT, Program.AnisotropicMaximum);
+			}
+			/*
+			 * Set the wrap mode.
+			 * */
+			if (RegisteredTextures[textureIndex].Parameters.HorizontalWrapMode == OpenBveApi.Texture.TextureWrapMode.ClampToEdge) {
 				Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_WRAP_S, Gl.GL_CLAMP_TO_EDGE);
 			} else {
 				Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_WRAP_S, Gl.GL_REPEAT);
 			}
-			if (RegisteredTextures[TextureIndex].Parameters.VerticalWrapMode == OpenBveApi.Texture.TextureWrapMode.ClampToEdge) {
+			if (RegisteredTextures[textureIndex].Parameters.VerticalWrapMode == OpenBveApi.Texture.TextureWrapMode.ClampToEdge) {
 				Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_WRAP_T, Gl.GL_CLAMP_TO_EDGE);
 			} else {
 				Gl.glTexParameterf(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_WRAP_T, Gl.GL_REPEAT);
 			}
-			// submit
-			Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_GENERATE_MIPMAP, Gl.GL_TRUE);
-			int width = RegisteredTextures[TextureIndex].RawWidth;
-			int height = RegisteredTextures[TextureIndex].RawHeight;
-			byte[] raw = RegisteredTextures[TextureIndex].RawData;
-			Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, Gl.GL_RGBA8, width, height, 0, Gl.GL_BGRA, Gl.GL_UNSIGNED_BYTE, raw);
+			/*
+			 * Submit the texture to OpenGL.
+			 * */
+			if (respectQuality) {
+				Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_GENERATE_MIPMAP, Gl.GL_TRUE);
+			} else {
+				Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_GENERATE_MIPMAP, Gl.GL_TRUE);
+			}
+			int width = RegisteredTextures[textureIndex].RawWidth;
+			int height = RegisteredTextures[textureIndex].RawHeight;
+			byte[] raw = RegisteredTextures[textureIndex].RawData;
+			Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, Gl.GL_RGBA8, width, height, 0, Gl.GL_RGBA, Gl.GL_UNSIGNED_BYTE, raw);
 		}
 		
 		// deinitializes

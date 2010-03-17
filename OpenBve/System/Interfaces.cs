@@ -1,106 +1,61 @@
+using OpenBveApi;
 using System;
-using System.Text;
 
 namespace OpenBve {
 	internal static class Interfaces {
 		
 		// host interface
-		internal class HostInterface : OpenBveApi.IHost10 {
+		internal class HostInterface : IHost10 {
 			
 			
 			// --- general ---
-			/// <summary>Reports a problem to the host application.</summary>
-			/// <param name="type">The type of problem to be reported.</param>
-			/// <param name="keyValuePairs">A list of key-value pairs containing information about the problem.</param>
-			public void Report(OpenBveApi.General.ReportType type, params OpenBveApi.General.ReportKeyValuePair[] keyValuePairs) {
-				Console.ForegroundColor = ConsoleColor.White;
-				Console.WriteLine("Report:");
+			
+			[Obsolete]
+			public void Report(General.ReportType type, params General.ReportKeyValuePair[] keyValuePairs) {
+				Program.Log.Append(type.ToString()).AppendLine(":");
 				for (int i = 0; i < keyValuePairs.Length; i++) {
-					Console.WriteLine("\t" + keyValuePairs[i].Key.ToString() + " = " + keyValuePairs[i].Value.ToString());
+					Program.Log.Append('\t').Append(keyValuePairs[i].Key.ToString()).Append(" = ").Append(keyValuePairs[i].Value.ToString()).AppendLine();
 				}
-				Console.ForegroundColor = ConsoleColor.Gray;
+				Program.Log.AppendLine();
 			}
 			
-			
-			// --- path ---
-			
-			/// <summary>Resolves a path reference into a platform-specific absolute path.</summary>
-			/// <param name="path">The path reference to resolve.</param>
-			/// <returns>The platform-specific absolute path, or a null reference if the path could not be resolved.</returns>
-			public string Resolve(OpenBveApi.Path.PathReference path) {
-				string baseFolder;
-				switch (path.Base) {
-					case OpenBveApi.Path.PathBase.AbsolutePath:
-						baseFolder = null;
-						break;
-					case OpenBveApi.Path.PathBase.PluginFolder:
-						baseFolder = OpenBveApi.Path.CombineFolder(Program.Path, "Plugins");
-						break;
-					default:
-						throw new NotImplementedException();
-				}
-				if (path.Type == OpenBveApi.Path.PathType.None) {
-					return baseFolder;
-				} else if (path.Path == null) {
-					return null;
-				} else {
-					if (baseFolder == null) {
-						if (path.Base == OpenBveApi.Path.PathBase.AbsolutePath) {
-							return path.Path;
-						} else {
-							return null;
-						}
-					} else if (path.Type == OpenBveApi.Path.PathType.File) {
-						return OpenBveApi.Path.CombineFile(baseFolder, path.Path);
-					} else if (path.Type == OpenBveApi.Path.PathType.Folder) {
-						return OpenBveApi.Path.CombineFolder(baseFolder, path.Path);
-					} else {
-						return null;
+			/// <summary>Reports a problem to the host application.</summary>
+			/// <param name="data">Information about the problem, e.g. the location where it occured, and a description.</param>
+			public void Report(params General.ReportData[] data) {
+				Program.Log.AppendLine("Report:");
+				for (int i = 0; i < data.Length; i++) {
+					string reportType = data[i].GetType().ToString();
+					if (reportType.StartsWith("OpenBveApi.General+Report")) {
+						reportType = reportType.Substring(25);
 					}
+					string reportValue = data[i].ToString();
+					Program.Log.Append('\t').Append(reportType).Append(": ").AppendLine(reportValue);
 				}
+				Program.Log.AppendLine();
 			}
 			
-			
-			// --- textures ---
+
+			// --- textures (loading) ---
 			
 			/// <summary>Loads a texture suitable for post-processing.</summary>
-			/// <param name="origin">The origin of the texture which includes a valid path.</param>
+			/// <param name="origin">The origin of the texture.</param>
 			/// <param name="texture">Receives the texture.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result LoadTexture(OpenBveApi.General.Origin origin, out OpenBveApi.Texture.TextureData texture) {
+			public General.Result LoadTexture(General.Origin origin, out Texture.TextureData texture) {
 				if (origin.Path == null) {
 					texture = null;
-					return OpenBveApi.General.Result.InvalidArgument;
+					return General.Result.InvalidArgument;
 				} else {
-					// collect information
-					string pluginPath;
-					object pluginData;
-					if (origin.Plugin != null) {
-						pluginData = origin.Plugin.Data;
-						if (origin.Plugin.Path != null) {
-							if (origin.Plugin.Path.Type != OpenBveApi.Path.PathType.File) {
-								texture = null;
-								return OpenBveApi.General.Result.InvalidArgument;
-							} else {
-								pluginPath = Resolve(origin.Plugin.Path);
-								pluginData = origin.Plugin.Data;
-							}
-						} else {
-							pluginPath = null;
-						}
-					} else {
-						pluginPath = null;
-						pluginData = null;
-					}
-					string path = Resolve(origin.Path);
 					int skipIndex = -1;
+					object data;
 					// use specific plugin if available
-					if (pluginPath != null) {
+					if (origin.Plugin != null) {
+						data = origin.Plugin.Data;
 						for (int i = 0; i < Plugins.TextureLoadingPlugins.Length; i++) {
-							if (string.Equals(Plugins.TextureLoadingPlugins[i].Path, pluginPath, StringComparison.OrdinalIgnoreCase)) {
-								OpenBveApi.General.Priority priority = Plugins.TextureLoadingPlugins[i].Api.CanLoadTexture(origin.Path.Type, path, origin.Encoding, pluginData);
-								if (priority != OpenBveApi.General.Priority.NotCapable) {
-									OpenBveApi.General.Result result = Plugins.TextureLoadingPlugins[i].Api.LoadTexture(origin.Path.Type, path, origin.Encoding, pluginData, out texture);
+							if (string.Equals(Plugins.TextureLoadingPlugins[i].File == origin.Plugin.File, StringComparison.OrdinalIgnoreCase)) {
+								General.Priority priority = Plugins.TextureLoadingPlugins[i].Api.CanLoadTexture(origin.Path, origin.Encoding, data);
+								if (priority != General.Priority.NotCapable) {
+									General.Result result = Plugins.TextureLoadingPlugins[i].Api.LoadTexture(origin.Path, origin.Encoding, data, out texture);
 									return result;
 								} else {
 									skipIndex = i;
@@ -108,15 +63,17 @@ namespace OpenBve {
 								}
 							}
 						}
+					} else {
+						data = null;
 					}
 					// find all compatible plugins
-					OpenBveApi.General.Priority[] pluginPriorities = new OpenBveApi.General.Priority[Plugins.TextureLoadingPlugins.Length];
+					General.Priority[] pluginPriorities = new General.Priority[Plugins.TextureLoadingPlugins.Length];
 					int[] pluginIndices = new int[Plugins.TextureLoadingPlugins.Length];
 					int pluginCount = 0;
 					for (int i = 0; i < Plugins.TextureLoadingPlugins.Length; i++) {
 						if (i != skipIndex) {
-							OpenBveApi.General.Priority priority = Plugins.TextureLoadingPlugins[i].Api.CanLoadTexture(origin.Path.Type, path, origin.Encoding, pluginData);
-							if (priority != OpenBveApi.General.Priority.NotCapable) {
+							General.Priority priority = Plugins.TextureLoadingPlugins[i].Api.CanLoadTexture(origin.Path, origin.Encoding, data);
+							if (priority != General.Priority.NotCapable) {
 								pluginPriorities[pluginCount] = priority;
 								pluginIndices[pluginCount] = i;
 								pluginCount++;
@@ -124,14 +81,17 @@ namespace OpenBve {
 						}
 					}
 					// use plugin with highest priority if available
-					if (pluginCount != 0) {
-						Array.Sort<OpenBveApi.General.Priority, int>(pluginPriorities, pluginIndices, 0, pluginCount);
+					if (pluginCount == 1) {
+						General.Result result = Plugins.TextureLoadingPlugins[pluginIndices[0]].Api.LoadTexture(origin.Path, origin.Encoding, data, out texture);
+						return result;
+					} else if (pluginCount != 0) {
+						Array.Sort<General.Priority, int>(pluginPriorities, pluginIndices, 0, pluginCount);
 						int i = pluginIndices[pluginCount - 1];
-						OpenBveApi.General.Result result = Plugins.TextureLoadingPlugins[i].Api.LoadTexture(origin.Path.Type, path, origin.Encoding, pluginData, out texture);
+						General.Result result = Plugins.TextureLoadingPlugins[pluginIndices[i]].Api.LoadTexture(origin.Path, origin.Encoding, data, out texture);
 						return result;
 					} else {
 						texture = null;
-						return OpenBveApi.General.Result.PluginNotFound;
+						return General.Result.PluginNotFound;
 					}
 				}
 			}
@@ -141,11 +101,11 @@ namespace OpenBve {
 			/// <param name="parameters">The parameters for the texture.</param>
 			/// <param name="handle">Receives a handle to the texture.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result RegisterTexture(OpenBveApi.General.Origin origin, OpenBveApi.Texture.TextureParameters parameters, out OpenBveApi.Texture.TextureHandle handle) {
+			public General.Result RegisterTexture(General.Origin origin, Texture.TextureParameters parameters, out Texture.TextureHandle handle) {
 				int index;
 				Textures.RegisterTexture(origin, parameters, out index);
-				handle = new OpenBveApi.Texture.TextureHandle((object)index);
-				return OpenBveApi.General.Result.Successful;
+				handle = new Textures.ApiHandle(index);
+				return General.Result.Successful;
 			}
 			
 			/// <summary>Registers a texture with the host application.</summary>
@@ -153,53 +113,34 @@ namespace OpenBve {
 			/// <param name="parameters">The parameters for the texture.</param>
 			/// <param name="handle">Receives a handle to the texture.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result RegisterTexture(OpenBveApi.Texture.TextureData texture, OpenBveApi.Texture.TextureParameters parameters, out OpenBveApi.Texture.TextureHandle handle) {
+			public General.Result RegisterTexture(Texture.TextureData texture, Texture.TextureParameters parameters, out Texture.TextureHandle handle) {
 				// TODO: Implement this.
-				handle = OpenBveApi.Texture.TextureHandle.Null;
-				return OpenBveApi.General.Result.NotSupported;
+				handle = null;
+				return General.Result.NotSupported;
 			}
 			
 			
-			// --- objects ---
+			// --- objects (loading) ---
 			
 			/// <summary>Loads an object from a file, suitable for post-processing.</summary>
 			/// <param name="origin">The origin of the object which includes a valid path.</param>
 			/// <param name="obj">Receives the object.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result LoadObject(OpenBveApi.General.Origin origin, out OpenBveApi.Geometry.GenericObject obj) {
+			public General.Result LoadObject(General.Origin origin, out Geometry.GenericObject obj) {
 				if (origin.Path == null) {
 					obj = null;
-					return OpenBveApi.General.Result.InvalidArgument;
+					return General.Result.InvalidArgument;
 				} else {
-					// collect information
-					string pluginPath;
-					object pluginData;
-					if (origin.Plugin != null) {
-						pluginData = origin.Plugin.Data;
-						if (origin.Plugin.Path != null) {
-							if (origin.Plugin.Path.Type != OpenBveApi.Path.PathType.File) {
-								obj = null;
-								return OpenBveApi.General.Result.InvalidArgument;
-							} else {
-								pluginPath = Resolve(origin.Plugin.Path);
-								pluginData = origin.Plugin.Data;
-							}
-						} else {
-							pluginPath = null;
-						}
-					} else {
-						pluginPath = null;
-						pluginData = null;
-					}
-					string path = Resolve(origin.Path);
 					int skipIndex = -1;
+					object data;
 					// use specific plugin if available
-					if (pluginPath != null) {
+					if (origin.Plugin != null) {
+						data = origin.Plugin.Data;
 						for (int i = 0; i < Plugins.ObjectLoadingPlugins.Length; i++) {
-							if (string.Equals(Plugins.ObjectLoadingPlugins[i].Path, pluginPath, StringComparison.OrdinalIgnoreCase)) {
-								OpenBveApi.General.Priority priority = Plugins.ObjectLoadingPlugins[i].Api.CanLoadObject(origin.Path.Type, path, origin.Encoding, pluginData);
-								if (priority != OpenBveApi.General.Priority.NotCapable) {
-									OpenBveApi.General.Result result = Plugins.ObjectLoadingPlugins[i].Api.LoadObject(origin.Path.Type, path, origin.Encoding, pluginData, out obj);
+							if (string.Equals(Plugins.ObjectLoadingPlugins[i].File == origin.Plugin.File, StringComparison.OrdinalIgnoreCase)) {
+								General.Priority priority = Plugins.ObjectLoadingPlugins[i].Api.CanLoadObject(origin.Path, origin.Encoding, data);
+								if (priority != General.Priority.NotCapable) {
+									General.Result result = Plugins.ObjectLoadingPlugins[i].Api.LoadObject(origin.Path, origin.Encoding, data, out obj);
 									return result;
 								} else {
 									skipIndex = i;
@@ -207,15 +148,17 @@ namespace OpenBve {
 								}
 							}
 						}
+					} else {
+						data = null;
 					}
 					// find all compatible plugins
-					OpenBveApi.General.Priority[] pluginPriorities = new OpenBveApi.General.Priority[Plugins.ObjectLoadingPlugins.Length];
+					General.Priority[] pluginPriorities = new General.Priority[Plugins.ObjectLoadingPlugins.Length];
 					int[] pluginIndices = new int[Plugins.ObjectLoadingPlugins.Length];
 					int pluginCount = 0;
 					for (int i = 0; i < Plugins.ObjectLoadingPlugins.Length; i++) {
 						if (i != skipIndex) {
-							OpenBveApi.General.Priority priority = Plugins.ObjectLoadingPlugins[i].Api.CanLoadObject(origin.Path.Type, path, origin.Encoding, pluginData);
-							if (priority != OpenBveApi.General.Priority.NotCapable) {
+							General.Priority priority = Plugins.ObjectLoadingPlugins[i].Api.CanLoadObject(origin.Path, origin.Encoding, data);
+							if (priority != General.Priority.NotCapable) {
 								pluginPriorities[pluginCount] = priority;
 								pluginIndices[pluginCount] = i;
 								pluginCount++;
@@ -223,49 +166,202 @@ namespace OpenBve {
 						}
 					}
 					// use plugin with highest priority if available
-					if (pluginCount != 0) {
-						Array.Sort<OpenBveApi.General.Priority, int>(pluginPriorities, pluginIndices, 0, pluginCount);
+					if (pluginCount == 1) {
+						General.Result result = Plugins.ObjectLoadingPlugins[pluginIndices[0]].Api.LoadObject(origin.Path, origin.Encoding, data, out obj);
+						return result;
+					} else if (pluginCount != 0) {
+						Array.Sort<General.Priority, int>(pluginPriorities, pluginIndices, 0, pluginCount);
 						int i = pluginIndices[pluginCount - 1];
-						OpenBveApi.General.Result result = Plugins.ObjectLoadingPlugins[i].Api.LoadObject(origin.Path.Type, path, origin.Encoding, pluginData, out obj);
+						General.Result result = Plugins.ObjectLoadingPlugins[pluginIndices[i]].Api.LoadObject(origin.Path, origin.Encoding, data, out obj);
 						return result;
 					} else {
 						obj = null;
-						return OpenBveApi.General.Result.PluginNotFound;
+						return General.Result.PluginNotFound;
 					}
 				}
 			}
 			
+			/// <summary>Registers an object with the host application.</summary>
+			/// <param name="obj">The object to register.</param>
+			/// <param name="handle">Receives a handle to the object.</param>
+			/// <returns>The success of the operation.</returns>
+			public General.Result RegisterObject(Geometry.GenericObject obj, out Geometry.ObjectHandle handle) {
+				int libraryIndex = ObjectLibrary.Library.Add(obj);
+				handle = new ObjectLibrary.ApiHandle(libraryIndex);
+				return General.Result.Successful;
+			}
 			
-			// --- sound ---
+			/// <summary>Creates a new instance of an object at a specified position with a specified orietation.</summary>
+			/// <param name="handle">The handle to the object.</param>
+			/// <param name="position">The position of the object.</param>
+			/// <param name="orientation">The orientation of the object.</param>
+			/// <returns>The success of the operation.</returns>
+			public General.Result CreateObject(Geometry.ObjectHandle handle, OpenBveApi.Math.Vector3 position, OpenBveApi.Math.Orientation3 orientation) {
+				// TODO: This operation should not be allowed at runtime.
+				ObjectLibrary.ApiHandle apiHandle = handle as ObjectLibrary.ApiHandle;
+				if (apiHandle != null) {
+					ObjectGrid.Grid.Add(apiHandle.LibraryIndex, position, orientation);
+					return General.Result.Successful;
+				} else {
+					return General.Result.InvalidArgument;
+				}
+			}
+
+			
+			// --- sound (loading) ---
 			
 			/// <summary>Loads a sound from a file, suitable for post-processing.</summary>
 			/// <param name="origin">The origin of the sound which includes a valid path.</param>
 			/// <param name="sound">Receives the sound data.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result LoadSound(OpenBveApi.General.Origin origin, out OpenBveApi.Sound.SoundData sound) {
+			public General.Result LoadSound(General.Origin origin, out Sound.SoundData sound) {
 				// TODO: Implement this.
 				sound = null;
-				return OpenBveApi.General.Result.NotSupported;
+				return General.Result.NotSupported;
 			}
 			
 			/// <summary>Registers a sound with the host application.</summary>
 			/// <param name="origin">The origin of the sound which includes a valid path.</param>
 			/// <param name="handle">Receives a handle to the sound.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result RegisterSound(OpenBveApi.General.Origin origin, out OpenBveApi.Sound.SoundHandle handle) {
+			public General.Result RegisterSound(General.Origin origin, out Sound.SoundBufferHandle handle) {
 				// TODO: Implement this.
-				handle = OpenBveApi.Sound.SoundHandle.Null;
-				return OpenBveApi.General.Result.NotSupported;
+				handle = null;
+				return General.Result.NotSupported;
 			}
 			
 			/// <summary>Registers a sound with the host application.</summary>
 			/// <param name="sound">The sound data to register.</param>
 			/// <param name="handle">Receives a handle to the sound.</param>
 			/// <returns>The success of the operation.</returns>
-			public OpenBveApi.General.Result RegisterSound(OpenBveApi.Sound.SoundData sound, out OpenBveApi.Sound.SoundHandle handle) {
+			public General.Result RegisterSound(Sound.SoundData sound, out Sound.SoundBufferHandle handle) {
 				// TODO: Implement this.
-				handle = OpenBveApi.Sound.SoundHandle.Null;
-				return OpenBveApi.General.Result.NotSupported;
+				handle = null;
+				return General.Result.NotSupported;
+			}
+			
+			
+			// --- route (loading) ---
+			
+			/// <summary>Loads a route.</summary>
+			/// <param name="origin">The origin of the route which includes a valid path.</param>
+			/// <param name="route">Receives the route data.</param>
+			/// <returns>The success of the operation.</returns>
+			internal General.Result LoadRoute(General.Origin origin, out Route.RouteData route) {
+				if (origin.Path == null) {
+					route = null;
+					return General.Result.InvalidArgument;
+				} else {
+					int skipIndex = -1;
+					object data;
+					// use specific plugin if available
+					if (origin.Plugin != null) {
+						data = origin.Plugin.Data;
+						for (int i = 0; i < Plugins.RouteLoadingPlugins.Length; i++) {
+							if (string.Equals(Plugins.RouteLoadingPlugins[i].File == origin.Plugin.File, StringComparison.OrdinalIgnoreCase)) {
+								General.Priority priority = Plugins.RouteLoadingPlugins[i].Api.CanLoadRoute(origin.Path, origin.Encoding, data);
+								if (priority != General.Priority.NotCapable) {
+									General.Result result = Plugins.RouteLoadingPlugins[i].Api.LoadRoute(origin.Path, origin.Encoding, data, out route);
+									return result;
+								} else {
+									skipIndex = i;
+									break;
+								}
+							}
+						}
+					} else {
+						data = null;
+					}
+					// find all compatible plugins
+					General.Priority[] pluginPriorities = new General.Priority[Plugins.RouteLoadingPlugins.Length];
+					int[] pluginIndices = new int[Plugins.RouteLoadingPlugins.Length];
+					int pluginCount = 0;
+					for (int i = 0; i < Plugins.RouteLoadingPlugins.Length; i++) {
+						if (i != skipIndex) {
+							General.Priority priority = Plugins.RouteLoadingPlugins[i].Api.CanLoadRoute(origin.Path, origin.Encoding, data);
+							if (priority != General.Priority.NotCapable) {
+								pluginPriorities[pluginCount] = priority;
+								pluginIndices[pluginCount] = i;
+								pluginCount++;
+							}
+						}
+					}
+					// use plugin with highest priority if available
+					if (pluginCount == 1) {
+						General.Result result = Plugins.RouteLoadingPlugins[pluginIndices[0]].Api.LoadRoute(origin.Path, origin.Encoding, data, out route);
+						return result;
+					} else if (pluginCount != 0) {
+						Array.Sort<General.Priority, int>(pluginPriorities, pluginIndices, 0, pluginCount);
+						int i = pluginIndices[pluginCount - 1];
+						General.Result result = Plugins.RouteLoadingPlugins[pluginIndices[i]].Api.LoadRoute(origin.Path, origin.Encoding, data, out route);
+						return result;
+					} else {
+						route = null;
+						return General.Result.PluginNotFound;
+					}
+				}
+			}
+
+			
+			
+			// --- sound (runtime) ---
+			
+			/// <summary>Plays the specified sound buffer and returns a handle by which the generated sound source can be identified.</summary>
+			/// <param name="bufferHandle">A handle to the sound buffer.</param>
+			/// <param name="position">The absolute position at which to play the sound.</param>
+			/// <param name="velocity">The velocity vector at which the sound travels.</param>
+			/// <param name="pitch">The pitch of the sound, where 1 represents nominal pitch.</param>
+			/// <param name="volume">The volume of the sound, where 1 represents nominal volume.</param>
+			/// <param name="looped">A boolean indicating whether to play the sound in an endless loop.</param>
+			/// <param name="sourceHandle">Receives a handle to the sound source.</param>
+			/// <returns>The success of the operation.</returns>
+			public General.Result PlaySound(Sound.SoundBufferHandle bufferHandle, OpenBveApi.Math.Vector3 position, OpenBveApi.Math.Vector3 velocity, double pitch, double volume, bool looped, out Sound.SoundSourceHandle sourceHandle) {
+				// TODO: Implement this.
+				sourceHandle = null;
+				return General.Result.NotSupported;
+			}
+			
+			/// <summary>Updates an already playing sound.</summary>
+			/// <param name="handle">A handle to the sound source.</param>
+			/// <param name="position">The absolute position at which to play the sound.</param>
+			/// <param name="velocity">The velocity vector at which the sound travels.</param>
+			/// <param name="pitch">The pitch of the sound, where 1 represents nominal pitch.</param>
+			/// <param name="volume">The volume of the sound, where 1 represents nominal volume.</param>
+			/// <returns>The success of the operation.</returns>
+			public General.Result UpdateSound(Sound.SoundSourceHandle handle, OpenBveApi.Math.Vector3 position, OpenBveApi.Math.Vector3 velocity, double pitch, double volume) {
+				// TODO: Implement this.
+				return General.Result.NotSupported;
+			}
+			
+			/// <summary>Stops playing the specified sound source.</summary>
+			/// <param name="handle">The sound source to stop playing.</param>
+			public General.Result StopSound(ref Sound.SoundSourceHandle handle) {
+				// TODO: Implement this.
+				return General.Result.NotSupported;
+			}
+			
+			
+			// --- plugins (runtime) ---
+
+			/// <summary>Queries data from another runtime plugin.</summary>
+			/// <param name="pluginType">The plugin to query data from.</param>
+			/// <param name="contentType">The type of content to query.</param>
+			/// <param name="contentData">Receives the queried content.</param>
+			/// <returns>The success of the operation.</returns>
+			public General.Result QueryPluginData(int pluginType, int contentType, out object contentData) {
+				// TODO: Implement this.
+				contentData = null;
+				return General.Result.NotSupported;
+			}
+			
+			/// <summary>Submits data to another runtime plugin.</summary>
+			/// <param name="pluginType">The plugin to submit data to.</param>
+			/// <param name="contentType">The type of content to submit.</param>
+			/// <param name="contentData">The data to submit.</param>
+			/// <returns>The success of the operation.</returns>
+			public General.Result SubmitPluginData(int pluginType, int contentType, object contentData) {
+				// TODO: Implement this.
+				return General.Result.NotSupported;
 			}
 
 		}

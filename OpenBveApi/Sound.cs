@@ -44,23 +44,13 @@ namespace OpenBveApi {
 			}
 		}
 		
-		// sound handle
-		/// <summary>Represents a handle to a sound as obtained from the host application.</summary>
-		public struct SoundHandle {
-			// members
-			/// <summary>Data by which the host application can identify the sound this handle points to, or a null reference.</summary>
-			public object SoundData;
-			// constructors
-			/// <summary>Creates a new instance of this structure.</summary>
-			/// <param name="SoundData">Data by which the host application can identify the sound this handle points to, or a null reference.</param>
-			public SoundHandle(object SoundData) {
-				this.SoundData = SoundData;
-			}
-			// read-only fields
-			/// <summary>Represents a handle that has not been allocated by the host application.</summary>
-			public static readonly SoundHandle Null = new SoundHandle(null);
-		}
+		// sound buffer handle
+		/// <summary>Represents a handle to a sound buffer as obtained from the host application.</summary>
+		public abstract class SoundBufferHandle { }
 
+		// sound source handle
+		/// <summary>Represents a handle to a sound source as obtained from the host application.</summary>
+		public abstract class SoundSourceHandle { }
 		
 	}
 }

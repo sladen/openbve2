@@ -2,19 +2,20 @@ using System;
 using System.Reflection;
 
 namespace OpenBve {
+	/// <summary>Provides functions to manage plugins.</summary>
 	internal static class Plugins {
 		
 		// plugin information
 		internal class PluginInformation {
 			// members
-			internal string Path;
+			internal string File;
 			internal Assembly Dll;
 			internal OpenBveApi.IPlugin10 Api;
 			// constructors
-			internal PluginInformation(string Path, Assembly Dll, OpenBveApi.IPlugin10 Api) {
-				this.Path = Path;
-				this.Dll = Dll;
-				this.Api = Api;
+			internal PluginInformation(string file, Assembly dll, OpenBveApi.IPlugin10 api) {
+				this.File = file;
+				this.Dll = dll;
+				this.Api = api;
 			}
 		}
 		
@@ -23,16 +24,17 @@ namespace OpenBve {
 		internal static PluginInformation[] TextureLoadingPlugins = null;
 		internal static PluginInformation[] ObjectLoadingPlugins = null;
 		internal static PluginInformation[] SoundLoadingPlugins = null;
+		internal static PluginInformation[] RouteLoadingPlugins = null;
 		
 		// initialize
-		internal static void Initialize(string Folder) {
+		internal static void Initialize(string folder) {
 			// all available plugins
 			{
 				int count = 0;
 				AllAvailablePlugins = new PluginInformation[16];
-				string[] files = System.IO.Directory.GetFiles(Folder);
+				string[] files = System.IO.Directory.GetFiles(folder);
 				for (int i = 0; i < files.Length; i++) {
-					if (string.Equals(System.IO.Path.GetExtension(files[i]), ".dll", StringComparison.OrdinalIgnoreCase)) {
+					if (files[i].EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) {
 						try {
 							Assembly dll = Assembly.LoadFile(files[i]);
 							Type[] types = dll.GetTypes();
@@ -71,7 +73,7 @@ namespace OpenBve {
 				for (int i = 0; i < AllAvailablePlugins.Length; i++) {
 					if (AllAvailablePlugins[i].Api.CanLoadTextures()) {
 						TextureLoadingPlugins[count] = AllAvailablePlugins[i];
-						Console.WriteLine("Plugin can load textures: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].Path));
+						Console.WriteLine("Plugin can load textures: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].File));
 						count++;
 					}
 				}
@@ -84,7 +86,7 @@ namespace OpenBve {
 				for (int i = 0; i < AllAvailablePlugins.Length; i++) {
 					if (AllAvailablePlugins[i].Api.CanLoadObjects()) {
 						ObjectLoadingPlugins[count] = AllAvailablePlugins[i];
-						Console.WriteLine("Plugin can load objects: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].Path));
+						Console.WriteLine("Plugin can load objects: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].File));
 						count++;
 					}
 				}
@@ -97,29 +99,38 @@ namespace OpenBve {
 				for (int i = 0; i < AllAvailablePlugins.Length; i++) {
 					if (AllAvailablePlugins[i].Api.CanLoadSounds()) {
 						SoundLoadingPlugins[count] = AllAvailablePlugins[i];
-						Console.WriteLine("Plugin can load sounds: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].Path));
+						Console.WriteLine("Plugin can load sounds: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].File));
 						count++;
 					}
 				}
 				Array.Resize<PluginInformation>(ref SoundLoadingPlugins, count);
 			}
-		}
-		
-		// move to front
-		internal static void MoveToFront(PluginInformation[] Data, int Index) {
-			PluginInformation entry = Data[Index];
-			for (int i = Index; i >= 1; i--) {
-				Data[i] = Data[i - 1];
+			// route-loading plugins
+			{
+				int count = 0;
+				RouteLoadingPlugins = new PluginInformation[AllAvailablePlugins.Length];
+				for (int i = 0; i < AllAvailablePlugins.Length; i++) {
+					if (AllAvailablePlugins[i].Api.CanLoadRoutes()) {
+						RouteLoadingPlugins[count] = AllAvailablePlugins[i];
+						Console.WriteLine("Plugin can load routes: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].File));
+						count++;
+					}
+				}
+				Array.Resize<PluginInformation>(ref RouteLoadingPlugins, count);
 			}
-			Data[0] = entry;
 		}
 		
 		// deinitialize
 		internal static void Deinitialize() {
 			for (int i = 0; i < AllAvailablePlugins.Length; i++) {
 				AllAvailablePlugins[i].Api.Unload();
-				Console.WriteLine("Plugin unloaded: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].Path));
+				Console.WriteLine("Plugin unloaded: " + System.IO.Path.GetFileName(AllAvailablePlugins[i].File));
 			}
+			AllAvailablePlugins = null;
+			TextureLoadingPlugins = null;
+			ObjectLoadingPlugins = null;
+			SoundLoadingPlugins = null;
+			RouteLoadingPlugins = null;
 		}
 		
 	}
